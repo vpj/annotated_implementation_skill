@@ -6,8 +6,8 @@ breadcrumbs: Adam=index.html; Convergence=convergence.html
 
 <section>
   <h1>Convergence of Adam</h1>
-  <p>Section 4 of <a href="https://arxiv.org/abs/1412.6980">Adam: A Method for Stochastic Optimization</a>
-     proves that Adam's average regret goes to zero on convex problems. This page explains the setting,
+  <p>The convergence analysis in <a href="https://arxiv.org/abs/1412.6980">Adam: A Method for Stochastic Optimization</a>
+     <span class="paper-ref">(Section 4)</span> proves that Adam's average regret goes to zero on convex problems. This page explains the setting,
      states the result, and sketches the proof. It also explains why the proof is wrong:
      <a href="https://arxiv.org/abs/1904.09237">Reddi et al. (2018)</a> found a simple convex problem on which
      Adam converges to the worst possible point.</p>
@@ -33,7 +33,7 @@ breadcrumbs: Adam=index.html; Convergence=convergence.html
   <p>Write $g_t = \nabla f_t(\theta_t)$, $g_{t,i}$ for its $i$-th coordinate, and
      $g_{1:T,i} = [g_{1,i}, g_{2,i}, \dots, g_{T,i}]$ for the history of coordinate $i$. Let
      $\gamma = \beta_1^2 / \sqrt{\beta_2}$.</p>
-  <p><strong>Theorem 4.1.</strong> Assume:</p>
+  <p id="thm-regret"><strong>Theorem</strong> <span class="paper-ref">(Theorem 4.1 in the paper)</span>. Assume:</p>
   <ul>
     <li>bounded gradients, $\lVert \nabla f_t(\theta) \rVert_2 \le G$ and $\lVert \nabla f_t(\theta) \rVert_\infty \le G_\infty$;</li>
     <li>the iterates stay in a bounded region, $\lVert \theta_n - \theta_m \rVert_2 \le D$ and
@@ -48,23 +48,23 @@ breadcrumbs: Adam=index.html; Convergence=convergence.html
   & + \frac{\alpha (1 + \beta_1) G_\infty}{(1 - \beta_1) \sqrt{1 - \beta_2} (1 - \gamma)^2} \sum_{i=1}^{d} \lVert g_{1:T,i} \rVert_2 \\
   & + \sum_{i=1}^{d} \frac{D_\infty^2 G_\infty \sqrt{1 - \beta_2}}{2 \alpha (1 - \beta_1) (1 - \lambda)^2}
   \end{align*}
-  <p><strong>Corollary 4.2.</strong> Since $\lVert g_{1:T,i} \rVert_2 \le G_\infty \sqrt{T}$ and
+  <p><strong>Corollary</strong> <span class="paper-ref">(Corollary 4.2)</span>. Since $\lVert g_{1:T,i} \rVert_2 \le G_\infty \sqrt{T}$ and
      $\sqrt{T \hat{v}_{T,i}} \le G_\infty \sqrt{T}$, every term is $O(\sqrt{T})$, so
      $R(T) / T = O(1 / \sqrt{T})$ and the average regret goes to zero.</p>
   <p>The bound depends on the gradients through $\lVert g_{1:T,i} \rVert_2$, coordinate by coordinate. When
      gradients are sparse these norms are much smaller than their worst case $G_\infty \sqrt{T}$. That is
      where adaptive methods like Adam and AdaGrad beat plain SGD.</p>
-  <aside class="note">The theorem is about a modified Adam. Algorithm 1, the
+  <aside class="note">The theorem is about a modified Adam. The algorithm as published, the
      <a href="adam.html">implementation here</a>, and every library implementation use a constant $\alpha$ and
      $\beta_1$. The theorem needs $\alpha_t = \alpha / \sqrt{t}$ and a $\beta_{1,t}$ that decays to zero.</aside>
 </section>
 
 <section>
   <h2>Proof sketch</h2>
-  <p>The full proof is in Appendix 10.1 of the paper. Its structure is as follows.</p>
+  <p>The paper gives the full proof in its appendix <span class="paper-ref">(Appendix 10.1)</span>. Its structure is as follows.</p>
   <details>
     <summary>Proof sketch</summary>
-    <p><strong>1. Linearize.</strong> A convex function lies above its tangent planes (Lemma 10.2), so each
+    <p><strong>1. Linearize.</strong> A convex function lies above its tangent planes <span class="paper-ref">(Lemma 10.2)</span>, so each
        term of the regret is bounded by a linear one:</p>
     $$f_t(\theta_t) - f_t(\theta^*) \le g_t^\top (\theta_t - \theta^*) = \sum_{i=1}^{d} g_{t,i} (\theta_{t,i} - \theta^*_i)$$
     <p><strong>2. Use the update rule.</strong> For one coordinate, subtract $\theta^*_i$ from both sides of the
@@ -81,15 +81,15 @@ breadcrumbs: Adam=index.html; Convergence=convergence.html
     $$\Big( \frac{\sqrt{\hat{v}_{t,i}}}{\alpha_t} - \frac{\sqrt{\hat{v}_{t-1,i}}}{\alpha_{t-1}} \Big) (\theta_{t,i} - \theta^*_i)^2$$
     <p>The proof bounds each $(\theta_{t,i} - \theta^*_i)^2$ by $D_\infty^2$, and the sum collapses to
        $D_\infty^2 \sqrt{\hat{v}_{T,i}} / \alpha_T$. That gives the first term of the bound.</p>
-    <p><strong>4. Bound the step-size term.</strong> Lemma 10.4 expands $\hat{m}_t$ and $\hat{v}_t$ as sums
+    <p><strong>4. Bound the step-size term.</strong> A lemma <span class="paper-ref">(Lemma 10.4)</span> expands $\hat{m}_t$ and $\hat{v}_t$ as sums
        over past gradients and bounds $\sum_t \hat{m}_{t,i}^2 / \sqrt{t \hat{v}_{t,i}}$ using the
-       arithmetic-geometric series in $\gamma$. This is where $\gamma \lt 1$ is needed. Lemma 10.3, proved by
+       arithmetic-geometric series in $\gamma$. This is where $\gamma \lt 1$ is needed. A second lemma <span class="paper-ref">(Lemma 10.3)</span>, proved by
        induction on $T$, then turns $\sum_t \sqrt{g_{t,i}^2 / t}$ into $2 G_\infty \lVert g_{1:T,i} \rVert_2$.
        That gives the second term.</p>
     <p><strong>5. Bound the momentum term.</strong> Because $\beta_{1,t} = \beta_1 \lambda^{t-1}$, the momentum
        terms form a geometric series in $\lambda$, and their sum is bounded by the third term.</p>
-    <p>The extracted text of Lemma 10.4 states a bound with $1 / (1 - \gamma)$ and no $G_\infty$, but its proof
-       ends with $G_\infty / (1 - \gamma)^2$. The theorem uses the second form.</p>
+    <p>The extracted text of the first lemma <span class="paper-ref">(Lemma 10.4)</span> states a bound with $1 / (1 - \gamma)$ and no $G_\infty$, but its proof
+       ends with $G_\infty / (1 - \gamma)^2$. The <a href="#thm-regret">theorem</a> uses the second form.</p>
   </details>
 </section>
 

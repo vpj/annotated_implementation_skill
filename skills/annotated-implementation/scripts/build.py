@@ -44,6 +44,12 @@ ID_RE = re.compile(r'\bid\s*=\s*(?:"([^"]*)"|\'([^\']*)\')', re.I)
 ABSOLUTE_URL_RE = re.compile(r'^([a-z][a-z0-9+.-]*:|//)', re.I)
 PLACEHOLDER_RE = re.compile(r'\{\{(\w+)\}\}')
 SECTION_KINDS = ('doc', 'note')
+PAPER_LABEL_RE = re.compile(r'\b(?:Eqs?|Equations?|Figs?|Figures?|Tables?|Alg|Algorithms?|Sections?|Sec|Appendix'
+                            r'|Theorems?|Lemmas?|Corollary|Corollaries|Propositions?|Definitions?)\.?'
+                            r'\s*\(?[A-Z]?\d+(?:\.\d+)*\b')
+PAPER_REF_SPAN_RE = re.compile(r'<span\b[^>]*\bclass\s*=\s*["\'][^"\']*\bpaper-ref\b[^>]*>.*?</span\s*>', re.S | re.I)
+MATH_RE = re.compile(r'\$\$.*?\$\$|\$[^$]*\$|\\\[.*?\\\]|\\\(.*?\\\)|\\begin\{(\w+\*?)\}.*?\\end\{\1\}', re.S)
+TAG_RE = re.compile(r'<[^>]+>')
 
 
 class BuildError(Exception):
@@ -122,6 +128,23 @@ def code_warnings(code: str, path: Path):
         if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
             if ast.get_docstring(node, clean=False) is not None:
                 warnings.append(f'{path}:{node.body[0].lineno}: docstring in code (move it to the annotation)')
+    return warnings
+
+
+def paper_reference_warnings(sections, path: Path):
+    """
+    The reader does not have the paper open, so a bare "Eq. 3" or "Algorithm 1" tells them nothing.
+    Prose must state what it refers to (or link an anchor on this site); the paper's own label may
+    appear only inside <span class="paper-ref">, next to the content it labels.
+    """
+    warnings = []
+    for s in sections:
+        text = PAPER_REF_SPAN_RE.sub(' ', COMMENT_RE.sub(' ', s['html']))
+        text = html.unescape(TAG_RE.sub(' ', MATH_RE.sub(' ', text)))
+        for m in PAPER_LABEL_RE.finditer(text):
+            warnings.append(f'{path}:{s["line"]}: bare paper reference {m.group(0)!r}: the reader cannot see the paper. '
+                            f'State what it says, link an anchor on this site, and keep the label only inside '
+                            f'<span class="paper-ref">')
     return warnings
 
 
@@ -225,7 +248,7 @@ def build_page(doc_path: Path, template: str):
             raise BuildError(f'{doc_path}:{s["line"]}: data-kind must be one of {", ".join(SECTION_KINDS)}, '
                              f'got {kind!r}')
 
-    warnings = []
+    warnings = paper_reference_warnings(sections, doc_path)
     if meta.get('code'):
         code_path = (doc_path.parent / meta['code']).resolve()
         if not code_path.is_file():
@@ -235,7 +258,7 @@ def build_page(doc_path: Path, template: str):
             ast.parse(code)
         except SyntaxError as e:
             raise BuildError(f'{code_path}:{e.lineno}: syntax error: {e.msg}')
-        warnings = code_warnings(code, code_path)
+        warnings += code_warnings(code, code_path)
         slice_code(sections, code.split('\n'), doc_path, code_path)
         highlighted = highlight_python(code)
         for s in sections:

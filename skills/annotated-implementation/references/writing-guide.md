@@ -121,8 +121,34 @@ through a block, a timeline of rollouts and updates. Inline SVG inside `<figure>
 `var(--hl-nf)`, `var(--hl-m)`, `var(--hl-nb)`, `var(--hl-bp)`) for accents so it works in both colour
 schemes; keep it small (`viewBox` around 400 wide, since the prose column is narrow).
 
+## The reader does not have the paper
+
+The pages must make sense on their own. "Eq. 2", "Fig. 14", "Algorithm 1, line 13" or "see
+Section 3.1" are meaningless to someone who has only the page in front of them, and they cannot
+check what the label pointed to. So:
+
+- **Say what it is.** Instead of "this is Eq. 2", show the equation: "the noisy sample is
+  $x_t = t x_1 + (1 - t) x_0$". Instead of "following Fig. 14", describe or draw the figure.
+  Instead of "the paper's Table 4 shows", give the numbers and what was compared.
+- **Refer within the site with links.** When prose depends on an equation, figure or step shown
+  elsewhere on this site, give that element an `id` and link to it:
+  `<a href="flow_matching.html#eq-path">the interpolation path</a>`. The link text names the
+  thing, not its number.
+- **Keep the paper's label only as a pointer for readers who open the paper.** Put it in
+  `<span class="paper-ref">(Eq. 3 in the paper)</span>`, right beside the content it labels. Never
+  let the label carry meaning that the surrounding prose does not.
+- **Discrepancies inside the paper** ("the algorithm box samples $t \sim \operatorname{Beta}(7, 1)$
+  but the text uses $1 - \eta$") are described by their content on both sides, with paper-ref
+  labels for each.
+- **Pseudocode.** If the paper's algorithm box is central, reproduce its steps on the page (an
+  `<ol>` with an `id`) and refer to steps by linking that list, not "line 13".
+
+The build warns about every paper label outside a `paper-ref` span, so a page that still leans on
+the paper's numbering does not pass.
+
 ## Links
 
 - Paper: arXiv abstract URL (`https://arxiv.org/abs/<id>`), not the PDF.
+- Within the site: link anchors on elements (`training.html#eq-flash`), never the paper's numbers.
 - Other pages: relative (`gae.html`, `loss.html#s4`).
 - Prior work the reader may need: link the paper, or its page here if implemented.

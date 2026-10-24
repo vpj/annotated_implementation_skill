@@ -7,18 +7,20 @@ breadcrumbs: Adam=index.html; AdaMax=adamax.html
 
 <section data-kind="doc" data-start="1" data-expect="from typing import Callable, Iterable, Optional, Tuple">
   <h1>AdaMax Optimizer</h1>
-  <p>This is a <a href="https://pytorch.org">PyTorch</a> implementation of AdaMax, Algorithm 2 from
+  <p>This is a <a href="https://pytorch.org">PyTorch</a> implementation of AdaMax, the infinity-norm variant of Adam from
      <a href="https://arxiv.org/abs/1412.6980">Adam: A Method for Stochastic Optimization</a>
-     (Section 7.1).</p>
+     <span class="paper-ref">(Algorithm 2, Section 7.1)</span>.</p>
   <p><a href="adam.html">Adam</a> scales each parameter's step by the inverse of an $L^2$ norm of its
      current and past gradients, $\sqrt{v_t}$. AdaMax replaces that $L^2$ norm with an $L^\infty$ norm.
      Generalizing to $L^p$ is unstable for large $p$, but the limit $p \to \infty$ turns out to be a
      simple and stable rule:</p>
+  <div id="eq-adamax">
   \begin{align*}
   m_t &= \beta_1 m_{t-1} + (1 - \beta_1) g_t \\
   u_t &= \max(\beta_2 u_{t-1}, |g_t|) \\
   \theta_t &= \theta_{t-1} - \frac{\alpha}{1 - \beta_1^t} \frac{m_t}{u_t}
   \end{align*}
+  </div>
 </section>
 
 <section data-kind="doc" data-start="7" data-expect="class AdaMax(Optimizer):">
@@ -85,8 +87,8 @@ breadcrumbs: Adam=index.html; AdaMax=adamax.html
   &= \max(\beta_2 u_{t-1}, |g_t|)
   \end{align*}
   <aside class="note">We add $\epsilon$ to $|g_t|$, as PyTorch's <code>torch.optim.Adamax</code> does.
-     Algorithm 2 has no $\epsilon$, and if a parameter's gradients have all been zero, $m_t = u_t = 0$ and the update
-     is $0 / 0$. The $\epsilon$ keeps $u_t$ positive. With $\epsilon = 0$ this class matches Algorithm 2 exactly.</aside>
+     <a href="#eq-adamax">The paper's update</a> has no $\epsilon$, and if a parameter's gradients have all been zero, $m_t = u_t = 0$ and the update
+     is $0 / 0$. The $\epsilon$ keeps $u_t$ positive. With $\epsilon = 0$ this class matches it exactly.</aside>
 </section>
 
 <section data-kind="doc" data-start="50" data-expect="step_size = group['lr'] / (1 - beta1 ** t)">

@@ -7,16 +7,19 @@ breadcrumbs: Adam=index.html; Adam optimizer=adam.html
 
 <section data-kind="doc" data-start="1" data-expect="import math">
   <h1>Adam Optimizer</h1>
-  <p>This is a <a href="https://pytorch.org">PyTorch</a> implementation of Algorithm 1 from
-     <a href="https://arxiv.org/abs/1412.6980">Adam: A Method for Stochastic Optimization</a>.</p>
+  <p>This is a <a href="https://pytorch.org">PyTorch</a> implementation of the Adam update from
+     <a href="https://arxiv.org/abs/1412.6980">Adam: A Method for Stochastic Optimization</a>
+     <span class="paper-ref">(Algorithm 1 in the paper)</span>.</p>
   <p>For each parameter, Adam keeps an exponential moving average of the gradient $m_t$ and of the
      squared gradient $v_t$, corrects both for starting at zero, and steps by their ratio:</p>
+  <div id="eq-adam">
   \begin{align*}
   m_t &= \beta_1 m_{t-1} + (1 - \beta_1) g_t \\
   v_t &= \beta_2 v_{t-1} + (1 - \beta_2) g_t^2 \\
   \hat{m}_t &= \frac{m_t}{1 - \beta_1^t} \qquad \hat{v}_t = \frac{v_t}{1 - \beta_2^t} \\
   \theta_t &= \theta_{t-1} - \alpha \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}
   \end{align*}
+  </div>
   <p>where $g_t$ is the gradient of the loss at step $t$ with respect to the parameters $\theta_{t-1}$,
      and all operations are element-wise; $g_t^2$ is $g_t \odot g_t$.</p>
 </section>
@@ -94,7 +97,7 @@ breadcrumbs: Adam=index.html; Adam optimizer=adam.html
 
 <section data-kind="doc" data-start="53" data-expect="alpha_t = group['lr'] * math.sqrt(bias_correction2) / bias_correction1">
   <p>Instead of computing $\hat{m}_t$ and $\hat{v}_t$ as new tensors, we fold both corrections into
-     scalars, as Section 2 of the paper suggests:</p>
+     scalars, as the paper suggests for efficiency <span class="paper-ref">(end of Section 2)</span>:</p>
   \begin{align*}
   \alpha \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}
   &= \alpha \frac{m_t / (1 - \beta_1^t)}{\sqrt{v_t} / \sqrt{1 - \beta_2^t} + \epsilon} \\
@@ -104,7 +107,7 @@ breadcrumbs: Adam=index.html; Adam optimizer=adam.html
   <p>with $\alpha_t = \alpha \frac{\sqrt{1 - \beta_2^t}}{1 - \beta_1^t}$ and
      $\hat{\epsilon} = \epsilon \sqrt{1 - \beta_2^t}$.</p>
   <aside class="note">The paper writes the efficient form with $\hat{\epsilon}$ but does not say what it is.
-     With $\hat{\epsilon} = \epsilon \sqrt{1 - \beta_2^t}$ the update is identical to Algorithm 1; using
+     With $\hat{\epsilon} = \epsilon \sqrt{1 - \beta_2^t}$ the update is identical to <a href="#eq-adam">the update with explicit bias correction</a>; using
      $\epsilon$ there instead would make the effective $\epsilon$ grow as $1 / \sqrt{1 - \beta_2^t}$ during
      the first few thousand steps. PyTorch's <code>torch.optim.Adam</code> makes the same choice.</aside>
 </section>

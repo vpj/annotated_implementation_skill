@@ -179,5 +179,10 @@ If the code must change after annotating, rerun the tests, rerun `--listing`, an
 - Write every symbol with identical LaTeX everywhere on a page (`\hat{A}_t`, never sometimes
   `\hat A_t`); clicking a symbol highlights every equal expression, and that only works on exact
   matches.
+- The reader does not have the paper. Never refer to "Eq. 3", "Fig. 14", "Algorithm 1" or
+  "Section 3.1" instead of saying what it is: restate the equation or idea, or link to where this
+  site shows it (give that equation or figure an `id`). The paper's own label may appear only in
+  `<span class="paper-ref">` beside the restated content; the build warns about any other.
+  Checkpoint messages to the user may still use the paper's numbering.
 - Pages are self-contained HTML plus the `assets/` folder the build copies next to them. Code is
   highlighted at build time; only KaTeX loads from a public CDN.

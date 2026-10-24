@@ -75,6 +75,8 @@ Extra styled elements:
 | `<figure>` + `<figcaption>` | Diagrams. Inline `<svg>` is preferred; use `currentColor` for lines and text, and the theme's token colours for accents (`var(--hl-k)` pink, `var(--hl-nf)` orange, `var(--hl-m)` purple, `var(--hl-nb)` cyan, `var(--hl-bp)` green) so it works in light and dark mode. |
 | `<details><summary>` | Long proofs or side derivations the reader can expand. |
 | `class="no-math"` | On any element whose `$` signs are literal (prices, shell variables). |
+| `<span class="paper-ref">` | The paper's own label for something the prose has just restated: `<span class="paper-ref">(Eq. 3 in the paper)</span>`. Shown small and dim. The only place a paper label ("Eq. 3", "Fig. 14", "Algorithm 1", "Section 3.1", "Theorem 2"...) may appear; anywhere else the build warns. |
+| `id="..."` on any element | A link target. Wrap an equation, figure or list that other prose refers to: `<div id="eq-loss">$$...$$</div>`, then link it with `<a href="training.html#eq-loss">the loss</a>`. The targeted element gets an accent bar when the page is opened at it. Use page-unique, descriptive ids (`eq-path`, `fig-mask`), not paper numbers. |
 
 ## Math
 

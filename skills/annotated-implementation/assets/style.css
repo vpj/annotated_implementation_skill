@@ -546,6 +546,22 @@ pre, tt, code {
     border-radius: 0 4px 4px 0;
 }
 
+.docs .paper-ref {
+    font-size: 0.85em;
+    opacity: 0.6;
+    white-space: nowrap;
+}
+
+.docs [id] {
+    scroll-margin-top: 40px;
+}
+
+.docs [id]:target {
+    border-left: 3px solid var(--hl-m);
+    padding-left: 8px;
+    margin-left: -11px;
+}
+
 .docs details {
     margin: 10px 0;
 }

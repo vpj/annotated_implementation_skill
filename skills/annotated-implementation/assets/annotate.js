@@ -329,6 +329,16 @@
         document.body.appendChild(banner);
     }
 
+    // Rendering math changes the page height, so the browser's jump to `#anchor` on load lands in the
+    // wrong place. Jump again once the layout is final.
+    function scrollToHash() {
+        const id = decodeURIComponent(location.hash.slice(1));
+        const target = id && document.getElementById(id);
+        if (target) {
+            target.scrollIntoView();
+        }
+    }
+
     function main() {
         const root = document.querySelector('.page');
         setupClickHighlight(root);
@@ -338,8 +348,12 @@
             return;
         }
         renderMath(root);
+        scrollToHash();
         if (document.fonts && document.fonts.ready) {
-            document.fonts.ready.then(() => selfCheck(root));
+            document.fonts.ready.then(() => {
+                scrollToHash();
+                selfCheck(root);
+            });
         } else {
             selfCheck(root);
         }
