@@ -58,7 +58,8 @@ then end your turn and wait for the user's answer. Silence is not approval.
    papers it depends on** (e.g. PPO depends on GAE for advantages).
 3. Draft a **page plan**: an overview page, a page per component worth its own explanation, a page
    per dependency that will be implemented, and an optional experiment page. One line per page
-   saying what it covers and which code file it annotates.
+   saying what it covers and which code file it annotates, plus the diagrams it will carry
+   (architecture, token layout, mask, loop, density...; see the writing guide's "Diagrams").
 
 If the user handed you existing code instead of a paper, the plan maps their files to pages, and
 Phase 3 becomes "strip comments/docstrings into notes, add tests, run them".
@@ -145,8 +146,8 @@ Stop and wait for approval or changes.
 
    Stop and wait for approval.
 3. Write the overview page and the core page first, build them, and show the user where they are.
-   **Checkpoint C** - ask whether the tone, depth and section granularity are right before writing
-   the remaining pages. Stop and wait.
+   **Checkpoint C** - ask whether the tone, depth, section granularity and diagrams are right
+   before writing the remaining pages. Stop and wait.
 4. Write the remaining pages following `references/writing-guide.md`.
 5. Compute every number the prose states (ratios, bounds, constants at the default
    hyperparameters) with a quick Python calculation instead of estimating it. Checkpoints only
@@ -164,9 +165,11 @@ If the code must change after annotating, rerun the tests, rerun `--listing`, an
    one is available (or ask the user to), with the window at least 900px wide: the overflow check
    measures the layout at the current width. Each page publishes a self-check once it has rendered:
    evaluate `window.annotationReport` with a JavaScript tool, or look for the red banner. It lists
-   math errors, display equations wider than their column, and text that still contains `$`
-   (math that was not rendered). Fix all of them; split wide equations over lines of an `align*`.
-   At a desktop width (at least 900px) also look at each page: diagrams render, sections line up
+   math errors, display equations wider than their column, text that still contains `$`
+   (math that was not rendered), and diagram labels with math written as plain text instead of
+   `$...$`. Fix all of them; split wide equations over lines of an `align*`.
+   At a desktop width (at least 900px) also look at each page: diagrams render with typeset
+   labels that sit inside their boxes, sections line up
    with their code, and clicking a key symbol in an equation lights up its other occurrences.
 3. Report: the pages produced (paths), test results, deviations from the paper, and anything
    left out of scope.

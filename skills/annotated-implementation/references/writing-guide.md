@@ -115,11 +115,52 @@ Follow the depth the user chose:
 
 ## Diagrams
 
-Add one when structure is easier to see than to read: data flow through a model, tensor shapes
-through a block, a timeline of rollouts and updates. Inline SVG inside `<figure>`, with a
-`<figcaption>`. Use `currentColor` for lines and text and the token colours (`var(--hl-k)`,
-`var(--hl-nf)`, `var(--hl-m)`, `var(--hl-nb)`, `var(--hl-bp)`) for accents so it works in both colour
-schemes; keep it small (`viewBox` around 400 wide, since the prose column is narrow).
+A reader re-deriving a method from the page needs pictures as much as equations. Plan the
+diagrams with the page plan, and expect most pages to have at least one.
+
+**When to draw.** Whenever a reader would otherwise build the picture in their head:
+
+- **Structure:** what goes into a model and what comes out, how two models differ (one row
+  each), which modules are new and which are reused.
+- **Tensors and tokens:** the token sequence a transformer sees, tensor shapes through a block,
+  how a trajectory is cut into chunks.
+- **Masks and matrices:** an attention mask, a transition matrix, a covariance pattern. Draw the
+  grid; it is far clearer than prose rules.
+- **Time:** a training or control loop, a timeline of rollouts and updates, what happens at each
+  step of a sampler, what is cached and what is thrown away.
+- **Distributions and geometry:** a sampling density, the region of input space a schedule
+  covers, a probability path, a clipped objective as a function of the ratio. When a derivation
+  claims "the density is concentrated near 0" or "it only covers the diagonal", plot it.
+- **Before and after:** the paper's choice against the alternative it replaces.
+
+Skip diagrams that only restate one equation or that decorate.
+
+**How to draw.**
+
+- Inline `<svg>` inside a `<figure>` with a `<figcaption>` that says what to notice, not just what
+  it is. Give the figure an `id` (`fig-mask`) so other prose can link to it.
+- Keep it small: a `viewBox` around 400 wide for the prose column (up to about 800 on prose-only
+  pages), `width="100%"`, font size 11 to 13 in viewBox units.
+- Use `currentColor` for lines and text and the theme's token colours (`var(--hl-k)` pink,
+  `var(--hl-nf)` orange, `var(--hl-m)` purple, `var(--hl-nb)` cyan, `var(--hl-bp)` green) for
+  accents, so it works in both colour schemes. Use the same colour for the same kind of thing
+  across a page's figures, and say what each colour means in the caption.
+- **Math in labels:** write a label containing math as LaTeX in `$...$`, exactly as the prose
+  writes it: `<text x="60" y="55" text-anchor="middle">$o_l$, $c$, $q_l$</text>`. The page
+  replaces it with a typeset label at the same anchor point, and because the LaTeX is identical
+  to the prose, clicking the symbol in the figure lights up the prose and equations too. Never fake
+  math with Unicode subscripts (`oₗ`) or plain `o_l`; the self-check reports both.
+- Labels with math are taller than plain text; leave at least one font size of space around them.
+- **Generate figures that show data or code behaviour.** When a figure shows what the code
+  computes (an attention mask, a schedule's density, a sampled trajectory), write a small script
+  that calls the implementation and emits the SVG, and keep it in the project (for example
+  `scripts/figures.py`). Mark the figure's place in the annotation with
+  `<!-- figure:name -->...<!-- /figure:name -->` and have the script rewrite what is between
+  the markers. A hand-drawn copy drifts from the code; a generated one cannot.
+- Hand-draw only conceptual figures (boxes and arrows). Lay them out on a grid in the `viewBox`
+  so boxes align, and use one arrow marker defined in `<defs>`.
+- Check every figure in the browser at desktop width: labels inside their boxes, nothing
+  clipped, math typeset.
 
 ## The reader does not have the paper
 

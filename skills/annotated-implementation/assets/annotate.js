@@ -210,6 +210,58 @@
         return byRaw;
     }
 
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+
+    // KaTeX output is HTML, which cannot live inside an SVG <text>. Every <text> whose content
+    // contains `$` is replaced by a <foreignObject> anchored at the same point (honouring
+    // text-anchor, font size, weight and fill) holding an HTML label, which renderMath then typesets.
+    // The label scales with the SVG's viewBox like the text it replaces.
+    function svgMathLabels(root) {
+        for (const text of root.querySelectorAll('svg text')) {
+            if (!text.textContent.includes('$')) continue;
+            const svg = text.ownerSVGElement;
+            const box = svg.viewBox && svg.viewBox.baseVal;
+            const width = box && box.width ? box.width : svg.getBoundingClientRect().width;
+            const x = parseFloat(text.getAttribute('x') || '0');
+            const y = parseFloat(text.getAttribute('y') || '0');
+            const style = getComputedStyle(text);
+            const size = parseFloat(style.fontSize);
+            const anchor = style.textAnchor;
+            const half = Math.max(Math.min(x, width - x), size);
+            const [left, span, justify] = anchor === 'middle' ? [x - half, 2 * half, 'center']
+                : anchor === 'end' ? [x - Math.max(x, size), Math.max(x, size), 'flex-end']
+                : [x, Math.max(width - x, size), 'flex-start'];
+
+            const fo = document.createElementNS(SVG_NS, 'foreignObject');
+            fo.setAttribute('x', left);
+            fo.setAttribute('y', y - 1.85 * size);
+            fo.setAttribute('width', span);
+            fo.setAttribute('height', 3 * size);
+            fo.setAttribute('class', 'svg-math');
+            if (text.hasAttribute('transform')) fo.setAttribute('transform', text.getAttribute('transform'));
+            const label = document.createElement('div');
+            label.className = 'svg-label';
+            label.style.fontSize = `${size}px`;
+            label.style.fontWeight = style.fontWeight;
+            label.style.justifyContent = justify;
+            if (style.fill && style.fill !== 'none') label.style.color = style.fill;
+            const line = document.createElement('span');
+            line.textContent = text.textContent;
+            label.appendChild(line);
+            fo.appendChild(label);
+            text.replaceWith(fo);
+        }
+    }
+
+    // SVG labels that look like math but are plain text: LaTeX syntax outside `$...$`, or Unicode
+    // sub/superscripts standing in for it. Both render badly; write the label as `$...$` instead.
+    function plainMathInSvg(root) {
+        const looksLikeMath = /[_^\\][{\w]|[₀-ₜᵢ-ᵪ⁰-ⁿ]/;
+        return [...root.querySelectorAll('svg text')]
+            .filter((t) => looksLikeMath.test(t.textContent))
+            .map((t) => ({section: sectionId(t), text: t.textContent}));
+    }
+
     function renderMath(root) {
         const base = {delimiters: DELIMITERS, ignoredClasses: ['no-math'], ...KATEX_OPTIONS};
 
@@ -311,18 +363,21 @@
             .map((e) => ({section: sectionId(e), tex: annotation(e)}));
         closed.forEach((d) => { d.open = false; });
         const unrenderedDollar = unrenderedDollars(root);
-        const report = {mathErrors, overflowing, unrenderedDollar,
-            ok: !mathErrors.length && !overflowing.length && !unrenderedDollar.length};
+        const svgPlainMath = plainMathInSvg(root);
+        const report = {mathErrors, overflowing, unrenderedDollar, svgPlainMath,
+            ok: !mathErrors.length && !overflowing.length && !unrenderedDollar.length && !svgPlainMath.length};
         window.annotationReport = report;
         if (report.ok) return;
 
         mathErrors.forEach((e) => console.error('KaTeX error:', e.message, '\n', e.tex));
         overflowing.forEach((e) => console.warn(`Equation wider than its column in #${e.section}:`, e.tex));
         unrenderedDollar.forEach((e) => console.warn(`Unrendered $ in #${e.section}:`, e.text));
+        svgPlainMath.forEach((e) => console.warn(`Diagram label in #${e.section} looks like math but is not in $...$:`, e.text));
         const parts = [];
         if (mathErrors.length) parts.push(`${mathErrors.length} math error(s)`);
         if (overflowing.length) parts.push(`${overflowing.length} equation(s) too wide`);
         if (unrenderedDollar.length) parts.push(`${unrenderedDollar.length} unrendered $`);
+        if (svgPlainMath.length) parts.push(`${svgPlainMath.length} diagram label(s) with plain-text math`);
         const banner = document.createElement('div');
         banner.className = 'math-errors';
         banner.textContent = `${parts.join(', ')} - see console or window.annotationReport`;
@@ -347,6 +402,7 @@
             window.annotationReport = {ok: false, error: 'KaTeX did not load'};
             return;
         }
+        svgMathLabels(root);
         renderMath(root);
         scrollToHash();
         if (document.fonts && document.fonts.ready) {

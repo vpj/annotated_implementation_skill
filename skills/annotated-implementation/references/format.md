@@ -72,7 +72,7 @@ Extra styled elements:
 | Element | Use |
 |---|---|
 | `<aside class="note">` | Deviations from the paper, caveats, implementation tricks. |
-| `<figure>` + `<figcaption>` | Diagrams. Inline `<svg>` is preferred; use `currentColor` for lines and text, and the theme's token colours for accents (`var(--hl-k)` pink, `var(--hl-nf)` orange, `var(--hl-m)` purple, `var(--hl-nb)` cyan, `var(--hl-bp)` green) so it works in light and dark mode. |
+| `<figure>` + `<figcaption>` | Diagrams. Inline `<svg>` is preferred; use `currentColor` for lines and text, and the theme's token colours for accents (`var(--hl-k)` pink, `var(--hl-nf)` orange, `var(--hl-m)` purple, `var(--hl-nb)` cyan, `var(--hl-bp)` green) so it works in light and dark mode. An SVG `<text>` containing `$...$` is replaced at load time by a typeset label anchored at the same `x`, `y` (honouring `text-anchor`, `font-size`, `font-weight` and `fill`). See the writing guide for when and how to draw. |
 | `<details><summary>` | Long proofs or side derivations the reader can expand. |
 | `class="no-math"` | On any element whose `$` signs are literal (prices, shell variables). |
 | `<span class="paper-ref">` | The paper's own label for something the prose has just restated: `<span class="paper-ref">(Eq. 3 in the paper)</span>`. Shown small and dim. The only place a paper label ("Eq. 3", "Fig. 14", "Algorithm 1", "Section 3.1", "Theorem 2"...) may appear; anywhere else the build warns. |
@@ -118,11 +118,13 @@ the writing guide for which to use.
 After rendering, every page sets `window.annotationReport`:
 
 ```js
-{ mathErrors: [{tex, message}], overflowing: [{section, tex}], unrenderedDollar: [{section, text}], ok: true|false }
+{ mathErrors: [{tex, message}], overflowing: [{section, tex}], unrenderedDollar: [{section, text}],
+  svgPlainMath: [{section, text}], ok: true|false }
 ```
 
 and shows a red banner when anything is wrong. `overflowing` lists display equations wider than
-their column; split them over the lines of an `align*`. `unrenderedDollar` lists sections whose
+their column; split them over the lines of an `align*`. `svgPlainMath` lists diagram labels that look like math (LaTeX `_`, `^` or `\` outside
+`$...$`, or Unicode sub/superscripts) but are not typeset; wrap them in `$...$`. `unrenderedDollar` lists sections whose
 visible text still contains `$`, usually an unbalanced delimiter (wrap literal dollar signs in
 `class="no-math"`).
 
