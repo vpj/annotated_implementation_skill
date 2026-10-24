@@ -1,0 +1,5 @@
+# Needed to run the example's tests (skills/annotated-implementation/examples/adam/tests).
+# Projects you build with the skill bring their own dependencies.
+-r requirements.txt
+pytest>=7.0
+torch>=2.0

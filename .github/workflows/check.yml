@@ -1,0 +1,44 @@
+name: check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install --index-url https://download.pytorch.org/whl/cpu torch
+          pip install -r requirements-dev.txt
+
+      - name: Manifests are valid JSON
+        run: |
+          python -m json.tool .claude-plugin/plugin.json > /dev/null
+          python -m json.tool .claude-plugin/marketplace.json > /dev/null
+
+      - name: Scripts parse as Python 3.8
+        run: |
+          python - <<'EOF'
+          import ast, pathlib
+          for path in pathlib.Path('skills/annotated-implementation/scripts').glob('*.py'):
+              ast.parse(path.read_text(), filename=str(path), feature_version=(3, 8))
+              print('ok', path)
+          EOF
+
+      - name: Example tests
+        run: python -m pytest -q skills/annotated-implementation/examples/adam/tests
+
+      - name: Example annotations are valid
+        run: |
+          python skills/annotated-implementation/scripts/build.py \
+            skills/annotated-implementation/examples/adam/annotations/*.doc.html --check
+          python skills/annotated-implementation/scripts/build.py \
+            skills/annotated-implementation/examples/adam/annotations/*.doc.html --out site

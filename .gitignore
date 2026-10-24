@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Built pages and downloaded papers are generated; never commit them.
+site/
+paper/
+*.pdf
+
+# Packaged skill for claude.ai uploads
+*.zip
+
+.DS_Store
+.idea/
+.vscode/

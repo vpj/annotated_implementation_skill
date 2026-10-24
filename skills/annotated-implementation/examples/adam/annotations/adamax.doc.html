@@ -1,0 +1,113 @@
+---
+title: AdaMax Optimizer
+summary: Annotated PyTorch implementation of AdaMax, Adam's infinity-norm variant, derived as the limit of an Lp moving average.
+code: ../adam/adamax.py
+breadcrumbs: Adam=index.html; AdaMax=adamax.html
+---
+
+<section data-kind="doc" data-start="1" data-expect="from typing import Callable, Iterable, Optional, Tuple">
+  <h1>AdaMax Optimizer</h1>
+  <p>This is a <a href="https://pytorch.org">PyTorch</a> implementation of AdaMax, Algorithm 2 from
+     <a href="https://arxiv.org/abs/1412.6980">Adam: A Method for Stochastic Optimization</a>
+     (Section 7.1).</p>
+  <p><a href="adam.html">Adam</a> scales each parameter's step by the inverse of an $L^2$ norm of its
+     current and past gradients, $\sqrt{v_t}$. AdaMax replaces that $L^2$ norm with an $L^\infty$ norm.
+     Generalizing to $L^p$ is unstable for large $p$, but the limit $p \to \infty$ turns out to be a
+     simple and stable rule:</p>
+  \begin{align*}
+  m_t &= \beta_1 m_{t-1} + (1 - \beta_1) g_t \\
+  u_t &= \max(\beta_2 u_{t-1}, |g_t|) \\
+  \theta_t &= \theta_{t-1} - \frac{\alpha}{1 - \beta_1^t} \frac{m_t}{u_t}
+  \end{align*}
+</section>
+
+<section data-kind="doc" data-start="7" data-expect="class AdaMax(Optimizer):">
+  <h2>From $L^p$ to $L^\infty$</h2>
+  <p>Adam's $v_t$ is a moving average of $|g_t|^2$, and the step divides by $v_t^{1/2}$. Do the same with
+     the $p$-th power, writing the decay rate as $\beta_2^p$:</p>
+  \begin{align*}
+  v_t &= \beta_2^p v_{t-1} + (1 - \beta_2^p) |g_t|^p \\
+  &= (1 - \beta_2^p) \sum_{i=1}^{t} \beta_2^{p(t-i)} |g_i|^p
+  \end{align*}
+  <p>and divide the step by $v_t^{1/p}$. Define $u_t$ as its limit as $p \to \infty$:</p>
+  \begin{align*}
+  u_t &= \lim_{p \to \infty} v_t^{1/p} \\
+  &= \lim_{p \to \infty} (1 - \beta_2^p)^{1/p} \\
+  &\qquad \cdot \Big( \sum_{i=1}^{t} \beta_2^{p(t-i)} |g_i|^p \Big)^{1/p} \\
+  &= \lim_{p \to \infty} \Big( \sum_{i=1}^{t} \big( \beta_2^{t-i} |g_i| \big)^p \Big)^{1/p} \\
+  &= \max \big( \beta_2^{t-1} |g_1|, \dots, \beta_2 |g_{t-1}|, |g_t| \big)
+  \end{align*}
+  <p>Two limits are used here, and the paper takes both as given.</p>
+  <ul>
+    <li>$(1 - \beta_2^p)^{1/p} \to 1$. Its logarithm is $\frac{1}{p} \log(1 - \beta_2^p)$. Both factors go to
+        zero, since $\beta_2^p \to 0$ for $\beta_2 \lt 1$.</li>
+    <li>The $L^p$ norm of a vector tends to its largest entry. For $x \in \mathbb{R}^t$ with largest entry
+        $x_{max}$, $x_{max} \le \big( \sum_i x_i^p \big)^{1/p} \le t^{1/p} x_{max}$, and $t^{1/p} \to 1$.</li>
+  </ul>
+  <p>We checked numerically that $v_t^{1/p}$, computed directly in log space for $p$ up to 5000, converges to
+     the $u_t$ this class computes.</p>
+</section>
+
+<section data-start="8" data-expect="def __init__(self, params: Iterable, lr: float = 2e-3">
+  <p>The paper's defaults for AdaMax are $\alpha = 0.002$, $\beta_1 = 0.9$ and $\beta_2 = 0.999$. The step size
+     is larger than Adam's $0.001$.</p>
+</section>
+
+<section data-start="18" data-expect="@torch.no_grad()">
+  <h3>Take a step</h3>
+  <p>The same as <a href="adam.html">Adam</a>: optionally re-evaluate the loss, then update every parameter
+     that has a gradient.</p>
+</section>
+
+<section data-start="32" data-expect="def update(self, param: torch.Tensor, group: dict):">
+  <h3>Update one parameter</h3>
+</section>
+
+<section data-start="37" data-expect="state = self.state[param]">
+  <p>Initialize $t = 0$, $m_0 = 0$ and $u_0 = 0$.</p>
+</section>
+
+<section data-start="43" data-expect="beta1, beta2 = group['betas']">
+  <p>$t \leftarrow t + 1$</p>
+</section>
+
+<section data-start="47" data-expect="m.mul_(beta1).add_(grad, alpha=1 - beta1)">
+  <p>$m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t$, the same first moment estimate as Adam.</p>
+</section>
+
+<section data-kind="doc" data-start="48" data-expect="torch.maximum(u.mul_(beta2), grad.abs().add_(group['eps']), out=u)">
+  <p>$u_t = \max(\beta_2 u_{t-1}, |g_t|)$</p>
+  <p>This recursion follows from the maximum above. Every term but the last carries at least one factor
+     of $\beta_2$, which can be taken out:</p>
+  \begin{align*}
+  u_t &= \max \big( \beta_2^{t-1} |g_1|, \dots, \beta_2 |g_{t-1}|, |g_t| \big) \\
+  &= \max \Big( \beta_2 \max \big( \beta_2^{t-2} |g_1|, \dots, |g_{t-1}| \big), |g_t| \Big) \\
+  &= \max(\beta_2 u_{t-1}, |g_t|)
+  \end{align*}
+  <aside class="note">We add $\epsilon$ to $|g_t|$, as PyTorch's <code>torch.optim.Adamax</code> does.
+     Algorithm 2 has no $\epsilon$, and if a parameter's gradients have all been zero, $m_t = u_t = 0$ and the update
+     is $0 / 0$. The $\epsilon$ keeps $u_t$ positive. With $\epsilon = 0$ this class matches Algorithm 2 exactly.</aside>
+</section>
+
+<section data-kind="doc" data-start="50" data-expect="step_size = group['lr'] / (1 - beta1 ** t)">
+  <p>$m_t$ is corrected for its zero initialization exactly as in Adam, by $1 - \beta_1^t$.</p>
+  <p>$u_t$ needs no correction. Adam's $v_t$ is an average whose weights only sum to $1 - \beta_2^t$, so
+     starting at zero pulls it down. $u_t$ is a maximum, and starting at zero changes nothing:
+     $u_1 = \max(\beta_2 \cdot 0, |g_1|) = |g_1|$ exactly.</p>
+</section>
+
+<section data-kind="doc" data-start="52" data-expect="param.addcdiv_(m, u, value=-step_size)">
+  <p>$\theta_t = \theta_{t-1} - \frac{\alpha}{1 - \beta_1^t} \frac{m_t}{u_t}$</p>
+  <p>The paper notes that AdaMax has a simpler bound on its steps than Adam, $|\Delta_t| \le \alpha$.
+     That holds for typical gradients, and on the first step it is exact: $\Delta_1 = \alpha \, g_1 / |g_1|$.</p>
+  <aside class="note">The bound can be exceeded slightly. Every term in the maximum is at most $u_t$, so
+     $|g_i| \le u_t \beta_2^{-(t-i)}$, and
+     \begin{align*}
+     |m_t| &\le (1 - \beta_1) \sum_{i=1}^{t} \beta_1^{t-i} |g_i| \\
+     &\le (1 - \beta_1) \, u_t \sum_{i=1}^{t} \Big( \frac{\beta_1}{\beta_2} \Big)^{t-i}
+     \end{align*}
+     For large $t$ this gives
+     $|\Delta_t| \le \alpha \frac{1 - \beta_1}{1 - \beta_1 / \beta_2} \approx 1.009 \alpha$ for the defaults.
+     Equality holds when $|g_i| = \beta_2^{-(t-i)}$, gradients that shrink slowly towards the present, and
+     this implementation reaches $1.009 \alpha$ on exactly that sequence.</aside>
+</section>

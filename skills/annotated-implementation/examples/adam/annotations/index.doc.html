@@ -1,0 +1,27 @@
+---
+title: Adam - A Method for Stochastic Optimization
+summary: Annotated PyTorch implementation of Adam and AdaMax, with the derivations behind them and a look at Adam's convergence proof.
+breadcrumbs: Adam=index.html
+---
+
+<section>
+  <h1>Adam: A Method for Stochastic Optimization</h1>
+  <p>This is a <a href="https://pytorch.org">PyTorch</a> implementation of
+     <a href="https://arxiv.org/abs/1412.6980">Adam: A Method for Stochastic Optimization</a>
+     (Kingma and Ba, 2015), with the derivations behind each line of the update.</p>
+  <p>Stochastic gradient descent takes a step of the same size, in every direction, for every parameter.
+     That is a poor fit when gradients for different parameters live on very different scales, or when
+     some parameters only get a useful gradient once in a while. AdaGrad and RMSProp fix this by dividing
+     each parameter's gradient by a running estimate of its magnitude. Adam keeps a running average of the
+     gradient (momentum) <em>and</em> of the squared gradient, divides one by the square root of the other,
+     and corrects both for being started at zero. The result is a step whose size in parameter space is
+     roughly the learning rate $\alpha$, whatever the scale of the gradients.</p>
+  <ul>
+    <li><a href="adam.html">Adam</a> - the optimizer, why the moving averages need bias correction, and how
+        big its steps can get.</li>
+    <li><a href="adamax.html">AdaMax</a> - replacing the squared-gradient average with an exponentially
+        weighted infinity norm, derived as the limit of an $L^p$ norm.</li>
+    <li><a href="convergence.html">Convergence</a> - the paper's regret bound, a sketch of its proof, and
+        why the proof does not hold for Adam as written.</li>
+  </ul>
+</section>

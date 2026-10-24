@@ -1,0 +1,807 @@
+/*
+ * Layout and colours for annotated implementation pages.
+ * Prose on the left (40%), code on the right (60%); a dark theme by default and a light theme
+ * for light-mode systems. Code tokens use Pygments class names (.k keyword, .n name, ...).
+ */
+
+:root {
+    --docs-bg: #1d2127;
+    --code-bg: #282a36;
+    --hover-bg: #080a16;
+    --section-border: #353745;
+    --docs-border: #293340;
+    --docs-text: #ccc;
+    --docs-light-text: #999;
+    --docs-link: #bbb;
+    --docs-link-visited: #aaa;
+    --code-inline-border: #484a56;
+    --code-inline-color: #ccc;
+    --section-link: #454545;
+    --nav: #ffffff;
+    --nav-tick: #aaa;
+    --lights-on: #00ffff;
+    --note-bg: #282a36;
+    --note-border: #6272a4;
+    --error-bg: #c62828;
+
+    --hl: #f8f8f2;
+    --hl-off: #f5f5f5;
+    --hl-c: #6272a4;
+    --hl-c-off: #838383;
+    --hl-err: #f8f8f2;
+    --hl-err-off: #f5f5f5;
+    --hl-g: #f8f8f2;
+    --hl-g-off: #f5f5f5;
+    --hl-k: #ff79c6;
+    --hl-k-off: #bcbcbc;
+    --hl-l: #f8f8f2;
+    --hl-l-off: #f5f5f5;
+    --hl-n: #f8f8f2;
+    --hl-n-off: #f5f5f5;
+    --hl-o: #ff4996;
+    --hl-o-off: #a4a4a4;
+    --hl-x: #f8f8f2;
+    --hl-x-off: #f5f5f5;
+    --hl-p: #a8a8a2;
+    --hl-p-off: #a5a5a5;
+    --hl-ch: #6272a4;
+    --hl-ch-off: #838383;
+    --hl-cm: #6272a4;
+    --hl-cm-off: #838383;
+    --hl-cp: #ff79c6;
+    --hl-cp-off: #bcbcbc;
+    --hl-cpf: #6272a4;
+    --hl-cpf-off: #838383;
+    --hl-c1: #6272a4;
+    --hl-c1-off: #838383;
+    --hl-cs: #6272a4;
+    --hl-cs-off: #838383;
+    --hl-gd: #8b080b;
+    --hl-gd-off: #4a4a4a;
+    --hl-ge: #f8f8f2;
+    --hl-ge-off: #f5f5f5;
+    --hl-gr: #f8f8f2;
+    --hl-gr-off: #f5f5f5;
+    --hl-gh: #f8f8f2;
+    --hl-gh-off: #f5f5f5;
+    --hl-gi: #f8f8f2;
+    --hl-gi-off: #f5f5f5;
+    --hl-go: #44475a;
+    --hl-go-off: #4f4f4f;
+    --hl-gp: #f8f8f2;
+    --hl-gp-off: #f5f5f5;
+    --hl-gs: #f8f8f2;
+    --hl-gs-off: #f5f5f5;
+    --hl-gu: #f8f8f2;
+    --hl-gu-off: #f5f5f5;
+    --hl-gt: #f8f8f2;
+    --hl-gt-off: #f5f5f5;
+    --hl-kc: #ff79c6;
+    --hl-kc-off: #bcbcbc;
+    --hl-kd: #8be9fd;
+    --hl-kd-off: #c4c4c4;
+    --hl-kn: #ff79c6;
+    --hl-kn-off: #bcbcbc;
+    --hl-kp: #ff79c6;
+    --hl-kp-off: #bcbcbc;
+    --hl-kr: #ff79c6;
+    --hl-kr-off: #bcbcbc;
+    --hl-kt: #8be9fd;
+    --hl-kt-off: #c4c4c4;
+    --hl-ld: #f8f8f2;
+    --hl-ld-off: #f5f5f5;
+    --hl-m: #bd93f9;
+    --hl-m-off: #c6c6c6;
+    --hl-s: #f1fa8c;
+    --hl-s-off: #c3c3c3;
+    --hl-na: #50fa7b;
+    --hl-na-off: #a5a5a5;
+    --hl-nb: #8be9fd;
+    --hl-nb-off: #c4c4c4;
+    --hl-nc: #ffb86c;
+    --hl-nc-off: #b6b6b6;
+    --hl-no: #f8f8f2;
+    --hl-no-off: #f5f5f5;
+    --hl-nd: #9d93ff;
+    --hl-nd-off: #c9c9c9;
+    --hl-ni: #f8f8f2;
+    --hl-ni-off: #f5f5f5;
+    --hl-ne: #d8d8d2;
+    --hl-ne-off: #d5d5d5;
+    --hl-nf: #ffb86c;
+    --hl-nf-off: #b6b6b6;
+    --hl-nl: #8be9fd;
+    --hl-nl-off: #c4c4c4;
+    --hl-nn: #f8f8f2;
+    --hl-nn-off: #f5f5f5;
+    --hl-nx: #f8f8f2;
+    --hl-nx-off: #f5f5f5;
+    --hl-py: #f8f8f2;
+    --hl-py-off: #f5f5f5;
+    --hl-nt: #ff79c6;
+    --hl-nt-off: #bcbcbc;
+    --hl-nv: #8be9fd;
+    --hl-nv-off: #c4c4c4;
+    --hl-ow: #ff79c6;
+    --hl-ow-off: #bcbcbc;
+    --hl-w: #f8f8f2;
+    --hl-w-off: #f5f5f5;
+    --hl-mb: #bd93f9;
+    --hl-mb-off: #c6c6c6;
+    --hl-mf: #bd93f9;
+    --hl-mf-off: #c6c6c6;
+    --hl-mh: #bd93f9;
+    --hl-mh-off: #c6c6c6;
+    --hl-mi: #bd93f9;
+    --hl-mi-off: #c6c6c6;
+    --hl-mo: #bd93f9;
+    --hl-mo-off: #c6c6c6;
+    --hl-sa: #f1fa8c;
+    --hl-sa-off: #c3c3c3;
+    --hl-sb: #f1fa8c;
+    --hl-sb-off: #c3c3c3;
+    --hl-sc: #f1fa8c;
+    --hl-sc-off: #c3c3c3;
+    --hl-dl: #f1fa8c;
+    --hl-dl-off: #c3c3c3;
+    --hl-sd: #f1fa8c;
+    --hl-sd-off: #c3c3c3;
+    --hl-s2: #f1fa8c;
+    --hl-s2-off: #c3c3c3;
+    --hl-se: #f1fa8c;
+    --hl-se-off: #c3c3c3;
+    --hl-sh: #f1fa8c;
+    --hl-sh-off: #c3c3c3;
+    --hl-si: #f1fa8c;
+    --hl-si-off: #c3c3c3;
+    --hl-sx: #f1fa8c;
+    --hl-sx-off: #c3c3c3;
+    --hl-sr: #f1fa8c;
+    --hl-sr-off: #c3c3c3;
+    --hl-s1: #f1fa8c;
+    --hl-s1-off: #c3c3c3;
+    --hl-ss: #f1fa8c;
+    --hl-ss-off: #c3c3c3;
+    --hl-bp: #50fa7b;
+    --hl-bp-off: #a5a5a5;
+    --hl-fm: #ffb86c;
+    --hl-fm-off: #b6b6b6;
+    --hl-vc: #8be9fd;
+    --hl-vc-off: #c4c4c4;
+    --hl-vg: #8be9fd;
+    --hl-vg-off: #c4c4c4;
+    --hl-vi: #8be9fd;
+    --hl-vi-off: #c4c4c4;
+    --hl-vm: #8be9fd;
+    --hl-vm-off: #c4c4c4;
+    --hl-il: #bd93f9;
+    --hl-il-off: #c6c6c6;
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --docs-bg: #ecf0f3;
+        --code-bg: #ebedef;
+        --hover-bg: #f8fafb;
+        --section-border: #e2e2eb;
+        --docs-border: #e2e2eb;
+        --docs-text: #555;
+        --docs-light-text: #777;
+        --docs-link: #666;
+        --docs-link-visited: #777;
+        --code-inline-border: #cacddc;
+        --code-inline-color: #666;
+        --section-link: #454545;
+        --nav: #000000;
+        --nav-tick: #666666;
+        --lights-on: #00ccff;
+        --note-bg: #e2e6ea;
+        --note-border: #213c93;
+
+        --hl: #060606;
+        --hl-off: #060606;
+        --hl-c: #213c93;
+        --hl-c-off: #5a5a5a;
+        --hl-err: #060606;
+        --hl-err-off: #060606;
+        --hl-g: #060606;
+        --hl-g-off: #060606;
+        --hl-k: #eb339d;
+        --hl-k-off: #8f8f8f;
+        --hl-l: #060606;
+        --hl-l-off: #060606;
+        --hl-n: #060606;
+        --hl-n-off: #060606;
+        --hl-o: #ff4996;
+        --hl-o-off: #a4a4a4;
+        --hl-x: #060606;
+        --hl-x-off: #060606;
+        --hl-p: #c9c900;
+        --hl-p-off: #646464;
+        --hl-ch: #213c93;
+        --hl-ch-off: #5a5a5a;
+        --hl-cm: #213c93;
+        --hl-cm-off: #5a5a5a;
+        --hl-cp: #eb339d;
+        --hl-cp-off: #8f8f8f;
+        --hl-cpf: #213c93;
+        --hl-cpf-off: #5a5a5a;
+        --hl-c1: #213c93;
+        --hl-c1-off: #5a5a5a;
+        --hl-cs: #213c93;
+        --hl-cs-off: #5a5a5a;
+        --hl-gd: #8b080b;
+        --hl-gd-off: #4a4a4a;
+        --hl-ge: #060606;
+        --hl-ge-off: #060606;
+        --hl-gr: #060606;
+        --hl-gr-off: #060606;
+        --hl-gh: #060606;
+        --hl-gh-off: #060606;
+        --hl-gi: #060606;
+        --hl-gi-off: #060606;
+        --hl-go: #44475a;
+        --hl-go-off: #4f4f4f;
+        --hl-gp: #060606;
+        --hl-gp-off: #060606;
+        --hl-gs: #060606;
+        --hl-gs-off: #060606;
+        --hl-gu: #060606;
+        --hl-gu-off: #060606;
+        --hl-gt: #060606;
+        --hl-gt-off: #060606;
+        --hl-kc: #eb339d;
+        --hl-kc-off: #8f8f8f;
+        --hl-kd: #00cbf6;
+        --hl-kd-off: #7b7b7b;
+        --hl-kn: #eb339d;
+        --hl-kn-off: #8f8f8f;
+        --hl-kp: #eb339d;
+        --hl-kp-off: #8f8f8f;
+        --hl-kr: #eb339d;
+        --hl-kr-off: #8f8f8f;
+        --hl-kt: #00cbf6;
+        --hl-kt-off: #7b7b7b;
+        --hl-ld: #060606;
+        --hl-ld-off: #060606;
+        --hl-m: #733fbe;
+        --hl-m-off: #7e7e7e;
+        --hl-s: #18c043;
+        --hl-s-off: #6c6c6c;
+        --hl-na: #25da53;
+        --hl-na-off: #808080;
+        --hl-nb: #00cbf6;
+        --hl-nb-off: #7b7b7b;
+        --hl-nc: #ff8707;
+        --hl-nc-off: #838383;
+        --hl-no: #060606;
+        --hl-no-off: #060606;
+        --hl-nd: #332b80;
+        --hl-nd-off: #565656;
+        --hl-ni: #060606;
+        --hl-ni-off: #060606;
+        --hl-ne: #b7b702;
+        --hl-ne-off: #5c5c5c;
+        --hl-nf: #ff8707;
+        --hl-nf-off: #838383;
+        --hl-nl: #00cbf6;
+        --hl-nl-off: #7b7b7b;
+        --hl-nn: #060606;
+        --hl-nn-off: #060606;
+        --hl-nx: #060606;
+        --hl-nx-off: #060606;
+        --hl-py: #060606;
+        --hl-py-off: #060606;
+        --hl-nt: #eb339d;
+        --hl-nt-off: #8f8f8f;
+        --hl-nv: #00cbf6;
+        --hl-nv-off: #7b7b7b;
+        --hl-ow: #eb339d;
+        --hl-ow-off: #8f8f8f;
+        --hl-w: #060606;
+        --hl-w-off: #060606;
+        --hl-mb: #733fbe;
+        --hl-mb-off: #7e7e7e;
+        --hl-mf: #733fbe;
+        --hl-mf-off: #7e7e7e;
+        --hl-mh: #733fbe;
+        --hl-mh-off: #7e7e7e;
+        --hl-mi: #733fbe;
+        --hl-mi-off: #7e7e7e;
+        --hl-mo: #733fbe;
+        --hl-mo-off: #7e7e7e;
+        --hl-sa: #18c043;
+        --hl-sa-off: #6c6c6c;
+        --hl-sb: #18c043;
+        --hl-sb-off: #6c6c6c;
+        --hl-sc: #18c043;
+        --hl-sc-off: #6c6c6c;
+        --hl-dl: #18c043;
+        --hl-dl-off: #6c6c6c;
+        --hl-sd: #18c043;
+        --hl-sd-off: #6c6c6c;
+        --hl-s2: #18c043;
+        --hl-s2-off: #6c6c6c;
+        --hl-se: #18c043;
+        --hl-se-off: #6c6c6c;
+        --hl-sh: #18c043;
+        --hl-sh-off: #6c6c6c;
+        --hl-si: #18c043;
+        --hl-si-off: #6c6c6c;
+        --hl-sx: #18c043;
+        --hl-sx-off: #6c6c6c;
+        --hl-sr: #18c043;
+        --hl-sr-off: #6c6c6c;
+        --hl-s1: #18c043;
+        --hl-s1-off: #6c6c6c;
+        --hl-ss: #18c043;
+        --hl-ss-off: #6c6c6c;
+        --hl-bp: #25da53;
+        --hl-bp-off: #808080;
+        --hl-fm: #ff8707;
+        --hl-fm-off: #838383;
+        --hl-vc: #00cbf6;
+        --hl-vc-off: #7b7b7b;
+        --hl-vg: #00cbf6;
+        --hl-vg-off: #7b7b7b;
+        --hl-vi: #00cbf6;
+        --hl-vi-off: #7b7b7b;
+        --hl-vm: #00cbf6;
+        --hl-vm-off: #7b7b7b;
+        --hl-il: #733fbe;
+        --hl-il-off: #7e7e7e;
+    }
+}
+
+html {
+    font-size: 62.5%;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-size: 1.5em;
+    line-height: 1.6;
+    font-weight: 400;
+    font-family: "SF Pro Text", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+    color: var(--docs-light-text);
+    background: var(--docs-bg);
+}
+
+a {
+    color: var(--docs-link);
+}
+
+a:visited {
+    color: var(--docs-link-visited);
+}
+
+p {
+    margin: 0 0 10px 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 40px 0 15px 0;
+}
+
+h2, h3, h4, h5, h6 {
+    margin-top: 0;
+}
+
+hr {
+    border-style: solid;
+    border-bottom: none;
+    border-color: #555;
+}
+
+/* Layout: one row per section, prose left and code right */
+
+.section {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    border-top: 1px solid var(--section-border);
+}
+
+.section:hover,
+.section:hover .code {
+    background: var(--hover-bg);
+}
+
+.docs {
+    position: relative;
+    box-sizing: border-box;
+    padding: 10px 25px 1px 50px;
+    min-width: 0;
+    text-align: left;
+}
+
+.docs.doc-strings {
+    color: var(--docs-text);
+}
+
+.code {
+    box-sizing: border-box;
+    background: var(--code-bg);
+    border-left: 1px solid var(--docs-border);
+    padding: 14px 8px 16px 15px;
+    min-width: 0;
+}
+
+.section.header {
+    border-top: none;
+}
+
+.section.header .docs {
+    padding-top: 20px;
+    padding-bottom: 10px;
+}
+
+.anchor {
+    position: absolute;
+    left: 28px;
+    top: 13px;
+    font: 12px Arial, sans-serif;
+    text-decoration: none;
+    color: var(--section-link) !important;
+    opacity: 0;
+    transition: opacity 0.2s linear;
+}
+
+.section:hover .anchor {
+    opacity: 1;
+}
+
+a.parent {
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 12px;
+    margin-right: 10px;
+    text-decoration: none;
+    color: var(--nav);
+}
+
+a.parent:visited {
+    color: var(--nav);
+}
+
+a.parent:after {
+    content: ">";
+    font-size: 14px;
+    margin-left: 4px;
+    color: var(--nav-tick);
+}
+
+/* Pages without code (overviews, proofs): one centred reading column */
+
+.page.prose-only {
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+.page.prose-only .section {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.page.prose-only .code {
+    display: none;
+}
+
+/* Prose */
+
+.docs > .anchor + * {
+    margin-top: 0;
+}
+
+.docs code {
+    padding: 0.2rem 0.5rem;
+    margin: 0 0.2rem;
+    font-size: 80%;
+    white-space: nowrap;
+    border-radius: 4px;
+    background: var(--code-bg);
+    color: var(--code-inline-color);
+    border: 1px solid var(--code-inline-border);
+}
+
+pre, tt, code {
+    line-height: 18px;
+    font-family: Monaco, Consolas, "Lucida Console", monospace;
+}
+
+.docs img {
+    max-width: 100%;
+}
+
+.docs table {
+    border-collapse: collapse;
+    margin: 10px 0;
+}
+
+.docs th, .docs td {
+    border: 1px solid var(--section-border);
+    padding: 4px 10px;
+}
+
+.docs figure {
+    margin: 15px 0;
+    text-align: center;
+}
+
+/* Not `.docs svg`: that would also match KaTeX's own SVGs (radicals, stretchy accents) */
+.docs figure svg, .docs figure img {
+    max-width: 100%;
+    height: auto;
+}
+
+.docs figcaption {
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.docs aside.note {
+    background: var(--note-bg);
+    border-left: 3px solid var(--note-border);
+    padding: 8px 12px;
+    margin: 10px 0;
+    border-radius: 0 4px 4px 0;
+}
+
+.docs details {
+    margin: 10px 0;
+}
+
+.docs details > summary {
+    cursor: pointer;
+}
+
+.katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+/* Code */
+
+.code pre {
+    margin: 0;
+    padding: 0;
+    font-size: 12px;
+    word-break: break-all;
+    white-space: pre-wrap;
+}
+
+span.lineno {
+    width: 20px;
+    display: inline-block;
+    text-align: right;
+    padding-right: 10px;
+    opacity: 0.3;
+    font-size: 10px;
+    white-space: nowrap;
+}
+
+.highlight {
+    color: var(--hl);
+}
+
+body.lights-off .highlight {
+    color: var(--hl-off);
+}
+
+.highlight .c { color: var(--hl-c); }
+body.lights-off .highlight .c { color: var(--hl-c-off); }
+.highlight .err { color: var(--hl-err); }
+body.lights-off .highlight .err { color: var(--hl-err-off); }
+.highlight .g { color: var(--hl-g); }
+body.lights-off .highlight .g { color: var(--hl-g-off); }
+.highlight .k { color: var(--hl-k); }
+body.lights-off .highlight .k { color: var(--hl-k-off); }
+.highlight .l { color: var(--hl-l); }
+body.lights-off .highlight .l { color: var(--hl-l-off); }
+.highlight .n { color: var(--hl-n); }
+body.lights-off .highlight .n { color: var(--hl-n-off); }
+.highlight .o { color: var(--hl-o); }
+body.lights-off .highlight .o { color: var(--hl-o-off); }
+.highlight .x { color: var(--hl-x); }
+body.lights-off .highlight .x { color: var(--hl-x-off); }
+.highlight .p { color: var(--hl-p); }
+body.lights-off .highlight .p { color: var(--hl-p-off); }
+.highlight .ch { color: var(--hl-ch); }
+body.lights-off .highlight .ch { color: var(--hl-ch-off); }
+.highlight .cm { color: var(--hl-cm); }
+body.lights-off .highlight .cm { color: var(--hl-cm-off); }
+.highlight .cp { color: var(--hl-cp); }
+body.lights-off .highlight .cp { color: var(--hl-cp-off); }
+.highlight .cpf { color: var(--hl-cpf); }
+body.lights-off .highlight .cpf { color: var(--hl-cpf-off); }
+.highlight .c1 { color: var(--hl-c1); }
+body.lights-off .highlight .c1 { color: var(--hl-c1-off); }
+.highlight .cs { color: var(--hl-cs); }
+body.lights-off .highlight .cs { color: var(--hl-cs-off); }
+.highlight .gd { color: var(--hl-gd); }
+body.lights-off .highlight .gd { color: var(--hl-gd-off); }
+.highlight .ge { color: var(--hl-ge); }
+body.lights-off .highlight .ge { color: var(--hl-ge-off); }
+.highlight .gr { color: var(--hl-gr); }
+body.lights-off .highlight .gr { color: var(--hl-gr-off); }
+.highlight .gh { color: var(--hl-gh); }
+body.lights-off .highlight .gh { color: var(--hl-gh-off); }
+.highlight .gi { color: var(--hl-gi); }
+body.lights-off .highlight .gi { color: var(--hl-gi-off); }
+.highlight .go { color: var(--hl-go); }
+body.lights-off .highlight .go { color: var(--hl-go-off); }
+.highlight .gp { color: var(--hl-gp); }
+body.lights-off .highlight .gp { color: var(--hl-gp-off); }
+.highlight .gs { color: var(--hl-gs); }
+body.lights-off .highlight .gs { color: var(--hl-gs-off); }
+.highlight .gu { color: var(--hl-gu); }
+body.lights-off .highlight .gu { color: var(--hl-gu-off); }
+.highlight .gt { color: var(--hl-gt); }
+body.lights-off .highlight .gt { color: var(--hl-gt-off); }
+.highlight .kc { color: var(--hl-kc); }
+body.lights-off .highlight .kc { color: var(--hl-kc-off); }
+.highlight .kd { color: var(--hl-kd); }
+body.lights-off .highlight .kd { color: var(--hl-kd-off); }
+.highlight .kn { color: var(--hl-kn); }
+body.lights-off .highlight .kn { color: var(--hl-kn-off); }
+.highlight .kp { color: var(--hl-kp); }
+body.lights-off .highlight .kp { color: var(--hl-kp-off); }
+.highlight .kr { color: var(--hl-kr); }
+body.lights-off .highlight .kr { color: var(--hl-kr-off); }
+.highlight .kt { color: var(--hl-kt); }
+body.lights-off .highlight .kt { color: var(--hl-kt-off); }
+.highlight .ld { color: var(--hl-ld); }
+body.lights-off .highlight .ld { color: var(--hl-ld-off); }
+.highlight .m { color: var(--hl-m); }
+body.lights-off .highlight .m { color: var(--hl-m-off); }
+.highlight .s { color: var(--hl-s); }
+body.lights-off .highlight .s { color: var(--hl-s-off); }
+.highlight .na { color: var(--hl-na); }
+body.lights-off .highlight .na { color: var(--hl-na-off); }
+.highlight .nb { color: var(--hl-nb); }
+body.lights-off .highlight .nb { color: var(--hl-nb-off); }
+.highlight .nc { color: var(--hl-nc); }
+body.lights-off .highlight .nc { color: var(--hl-nc-off); }
+.highlight .no { color: var(--hl-no); }
+body.lights-off .highlight .no { color: var(--hl-no-off); }
+.highlight .nd { color: var(--hl-nd); }
+body.lights-off .highlight .nd { color: var(--hl-nd-off); }
+.highlight .ni { color: var(--hl-ni); }
+body.lights-off .highlight .ni { color: var(--hl-ni-off); }
+.highlight .ne { color: var(--hl-ne); }
+body.lights-off .highlight .ne { color: var(--hl-ne-off); }
+.highlight .nf { color: var(--hl-nf); }
+body.lights-off .highlight .nf { color: var(--hl-nf-off); }
+.highlight .nl { color: var(--hl-nl); }
+body.lights-off .highlight .nl { color: var(--hl-nl-off); }
+.highlight .nn { color: var(--hl-nn); }
+body.lights-off .highlight .nn { color: var(--hl-nn-off); }
+.highlight .nx { color: var(--hl-nx); }
+body.lights-off .highlight .nx { color: var(--hl-nx-off); }
+.highlight .py { color: var(--hl-py); }
+body.lights-off .highlight .py { color: var(--hl-py-off); }
+.highlight .nt { color: var(--hl-nt); }
+body.lights-off .highlight .nt { color: var(--hl-nt-off); }
+.highlight .nv { color: var(--hl-nv); }
+body.lights-off .highlight .nv { color: var(--hl-nv-off); }
+.highlight .ow { color: var(--hl-ow); }
+body.lights-off .highlight .ow { color: var(--hl-ow-off); }
+.highlight .w { color: var(--hl-w); }
+body.lights-off .highlight .w { color: var(--hl-w-off); }
+.highlight .mb { color: var(--hl-mb); }
+body.lights-off .highlight .mb { color: var(--hl-mb-off); }
+.highlight .mf { color: var(--hl-mf); }
+body.lights-off .highlight .mf { color: var(--hl-mf-off); }
+.highlight .mh { color: var(--hl-mh); }
+body.lights-off .highlight .mh { color: var(--hl-mh-off); }
+.highlight .mi { color: var(--hl-mi); }
+body.lights-off .highlight .mi { color: var(--hl-mi-off); }
+.highlight .mo { color: var(--hl-mo); }
+body.lights-off .highlight .mo { color: var(--hl-mo-off); }
+.highlight .sa { color: var(--hl-sa); }
+body.lights-off .highlight .sa { color: var(--hl-sa-off); }
+.highlight .sb { color: var(--hl-sb); }
+body.lights-off .highlight .sb { color: var(--hl-sb-off); }
+.highlight .sc { color: var(--hl-sc); }
+body.lights-off .highlight .sc { color: var(--hl-sc-off); }
+.highlight .dl { color: var(--hl-dl); }
+body.lights-off .highlight .dl { color: var(--hl-dl-off); }
+.highlight .sd { color: var(--hl-sd); }
+body.lights-off .highlight .sd { color: var(--hl-sd-off); }
+.highlight .s2 { color: var(--hl-s2); }
+body.lights-off .highlight .s2 { color: var(--hl-s2-off); }
+.highlight .se { color: var(--hl-se); }
+body.lights-off .highlight .se { color: var(--hl-se-off); }
+.highlight .sh { color: var(--hl-sh); }
+body.lights-off .highlight .sh { color: var(--hl-sh-off); }
+.highlight .si { color: var(--hl-si); }
+body.lights-off .highlight .si { color: var(--hl-si-off); }
+.highlight .sx { color: var(--hl-sx); }
+body.lights-off .highlight .sx { color: var(--hl-sx-off); }
+.highlight .sr { color: var(--hl-sr); }
+body.lights-off .highlight .sr { color: var(--hl-sr-off); }
+.highlight .s1 { color: var(--hl-s1); }
+body.lights-off .highlight .s1 { color: var(--hl-s1-off); }
+.highlight .ss { color: var(--hl-ss); }
+body.lights-off .highlight .ss { color: var(--hl-ss-off); }
+.highlight .bp { color: var(--hl-bp); }
+body.lights-off .highlight .bp { color: var(--hl-bp-off); }
+.highlight .fm { color: var(--hl-fm); }
+body.lights-off .highlight .fm { color: var(--hl-fm-off); }
+.highlight .vc { color: var(--hl-vc); }
+body.lights-off .highlight .vc { color: var(--hl-vc-off); }
+.highlight .vg { color: var(--hl-vg); }
+body.lights-off .highlight .vg { color: var(--hl-vg-off); }
+.highlight .vi { color: var(--hl-vi); }
+body.lights-off .highlight .vi { color: var(--hl-vi-off); }
+.highlight .vm { color: var(--hl-vm); }
+body.lights-off .highlight .vm { color: var(--hl-vm-off); }
+.highlight .il { color: var(--hl-il); }
+body.lights-off .highlight .il { color: var(--hl-il-off); }
+
+/* Click to highlight: every occurrence of a clicked identifier or equation symbol glows */
+
+.highlight .n, .highlight .nn, .highlight .nc, .highlight .nf {
+    cursor: pointer;
+}
+
+.katex span {
+    cursor: default;
+}
+
+.katex [class*="eq-"], .katex [class*="eq-"] span {
+    cursor: pointer;
+}
+
+body.lights-off .highlight .clicked,
+body.lights-off .katex .clicked {
+    color: var(--lights-on) !important;
+    text-shadow: 0 0 20px var(--lights-on);
+}
+
+/* Self-check banner */
+
+.math-errors {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    background: var(--error-bg);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    z-index: 10;
+}
+
+/* Narrow screens: prose above code */
+
+@media (max-width: 767px) {
+    .section {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .docs {
+        padding: 10px 8px 1px 8px;
+    }
+
+    .code {
+        border-left: none;
+    }
+
+    .code.empty {
+        display: none;
+    }
+
+    .anchor {
+        display: none;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .docs {
+        padding: 10px 8px 1px 8px;
+    }
+
+    .anchor {
+        display: none;
+    }
+}

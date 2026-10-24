@@ -1,0 +1,118 @@
+---
+title: Adam Convergence Analysis
+summary: The regret bound from the Adam paper, a sketch of its proof, and the counterexample showing the proof does not hold.
+breadcrumbs: Adam=index.html; Convergence=convergence.html
+---
+
+<section>
+  <h1>Convergence of Adam</h1>
+  <p>Section 4 of <a href="https://arxiv.org/abs/1412.6980">Adam: A Method for Stochastic Optimization</a>
+     proves that Adam's average regret goes to zero on convex problems. This page explains the setting,
+     states the result, and sketches the proof. It also explains why the proof is wrong:
+     <a href="https://arxiv.org/abs/1904.09237">Reddi et al. (2018)</a> found a simple convex problem on which
+     Adam converges to the worst possible point.</p>
+</section>
+
+<section>
+  <h2>Online convex optimization</h2>
+  <p>The analysis uses the online learning framework of Zinkevich (2003). At every step $t$ the optimizer
+     commits to parameters $\theta_t$, and only then is it shown a convex cost function $f_t$ and pays
+     $f_t(\theta_t)$. The sequence $f_1, f_2, \dots, f_T$ is arbitrary and unknown in advance. Minibatch
+     training is the special case where each $f_t$ is the loss on a random minibatch.</p>
+  <p>The optimizer is measured by its <strong>regret</strong>: how much more it paid in total than the single
+     best fixed parameter chosen with hindsight,</p>
+  $$R(T) = \sum_{t=1}^{T} \big[ f_t(\theta_t) - f_t(\theta^*) \big]
+    \qquad \theta^* = \arg\min_{\theta \in \mathcal{X}} \sum_{t=1}^{T} f_t(\theta)$$
+  <p>Regret grows with $T$, and the question is how fast. If $R(T)$ grows more slowly than $T$, the average
+     regret $R(T) / T$ goes to zero: on average the optimizer does as well as $\theta^*$. The best possible rate for
+     general convex problems is $O(\sqrt{T})$.</p>
+</section>
+
+<section>
+  <h2>The theorem</h2>
+  <p>Write $g_t = \nabla f_t(\theta_t)$, $g_{t,i}$ for its $i$-th coordinate, and
+     $g_{1:T,i} = [g_{1,i}, g_{2,i}, \dots, g_{T,i}]$ for the history of coordinate $i$. Let
+     $\gamma = \beta_1^2 / \sqrt{\beta_2}$.</p>
+  <p><strong>Theorem 4.1.</strong> Assume:</p>
+  <ul>
+    <li>bounded gradients, $\lVert \nabla f_t(\theta) \rVert_2 \le G$ and $\lVert \nabla f_t(\theta) \rVert_\infty \le G_\infty$;</li>
+    <li>the iterates stay in a bounded region, $\lVert \theta_n - \theta_m \rVert_2 \le D$ and
+        $\lVert \theta_n - \theta_m \rVert_\infty \le D_\infty$;</li>
+    <li>$\gamma \lt 1$;</li>
+    <li>the step size decays as $\alpha_t = \alpha / \sqrt{t}$, and the first-moment decay rate decays as
+        $\beta_{1,t} = \beta_1 \lambda^{t-1}$ with $\lambda \in (0, 1)$.</li>
+  </ul>
+  <p>Then for all $T \ge 1$,</p>
+  \begin{align*}
+  R(T) \le & \frac{D^2}{2 \alpha (1 - \beta_1)} \sum_{i=1}^{d} \sqrt{T \hat{v}_{T,i}} \\
+  & + \frac{\alpha (1 + \beta_1) G_\infty}{(1 - \beta_1) \sqrt{1 - \beta_2} (1 - \gamma)^2} \sum_{i=1}^{d} \lVert g_{1:T,i} \rVert_2 \\
+  & + \sum_{i=1}^{d} \frac{D_\infty^2 G_\infty \sqrt{1 - \beta_2}}{2 \alpha (1 - \beta_1) (1 - \lambda)^2}
+  \end{align*}
+  <p><strong>Corollary 4.2.</strong> Since $\lVert g_{1:T,i} \rVert_2 \le G_\infty \sqrt{T}$ and
+     $\sqrt{T \hat{v}_{T,i}} \le G_\infty \sqrt{T}$, every term is $O(\sqrt{T})$, so
+     $R(T) / T = O(1 / \sqrt{T})$ and the average regret goes to zero.</p>
+  <p>The bound depends on the gradients through $\lVert g_{1:T,i} \rVert_2$, coordinate by coordinate. When
+     gradients are sparse these norms are much smaller than their worst case $G_\infty \sqrt{T}$. That is
+     where adaptive methods like Adam and AdaGrad beat plain SGD.</p>
+  <aside class="note">The theorem is about a modified Adam. Algorithm 1, the
+     <a href="adam.html">implementation here</a>, and every library implementation use a constant $\alpha$ and
+     $\beta_1$. The theorem needs $\alpha_t = \alpha / \sqrt{t}$ and a $\beta_{1,t}$ that decays to zero.</aside>
+</section>
+
+<section>
+  <h2>Proof sketch</h2>
+  <p>The full proof is in Appendix 10.1 of the paper. Its structure is as follows.</p>
+  <details>
+    <summary>Proof sketch</summary>
+    <p><strong>1. Linearize.</strong> A convex function lies above its tangent planes (Lemma 10.2), so each
+       term of the regret is bounded by a linear one:</p>
+    $$f_t(\theta_t) - f_t(\theta^*) \le g_t^\top (\theta_t - \theta^*) = \sum_{i=1}^{d} g_{t,i} (\theta_{t,i} - \theta^*_i)$$
+    <p><strong>2. Use the update rule.</strong> For one coordinate, subtract $\theta^*_i$ from both sides of the
+       update and square. Solving for $g_{t,i}(\theta_{t,i} - \theta^*_i)$ and applying Young's inequality
+       $ab \le a^2 / 2 + b^2 / 2$ to the momentum cross term gives three kinds of terms:</p>
+    <ul>
+      <li>a distance term $\frac{\sqrt{\hat{v}_{t,i}}}{2 \alpha_t (1 - \beta_1)}
+          \big( (\theta_{t,i} - \theta^*_i)^2 - (\theta_{t+1,i} - \theta^*_i)^2 \big)$,</li>
+      <li>a step-size term proportional to $\alpha_t \, \hat{m}_{t,i}^2 / \sqrt{\hat{v}_{t,i}}$,</li>
+      <li>a momentum term weighted by $\beta_{1,t}$.</li>
+    </ul>
+    <p><strong>3. Telescope the distance term.</strong> Summed over $t$, the differences of squared distances
+       collapse, leaving terms of the form</p>
+    $$\Big( \frac{\sqrt{\hat{v}_{t,i}}}{\alpha_t} - \frac{\sqrt{\hat{v}_{t-1,i}}}{\alpha_{t-1}} \Big) (\theta_{t,i} - \theta^*_i)^2$$
+    <p>The proof bounds each $(\theta_{t,i} - \theta^*_i)^2$ by $D_\infty^2$, and the sum collapses to
+       $D_\infty^2 \sqrt{\hat{v}_{T,i}} / \alpha_T$. That gives the first term of the bound.</p>
+    <p><strong>4. Bound the step-size term.</strong> Lemma 10.4 expands $\hat{m}_t$ and $\hat{v}_t$ as sums
+       over past gradients and bounds $\sum_t \hat{m}_{t,i}^2 / \sqrt{t \hat{v}_{t,i}}$ using the
+       arithmetic-geometric series in $\gamma$. This is where $\gamma \lt 1$ is needed. Lemma 10.3, proved by
+       induction on $T$, then turns $\sum_t \sqrt{g_{t,i}^2 / t}$ into $2 G_\infty \lVert g_{1:T,i} \rVert_2$.
+       That gives the second term.</p>
+    <p><strong>5. Bound the momentum term.</strong> Because $\beta_{1,t} = \beta_1 \lambda^{t-1}$, the momentum
+       terms form a geometric series in $\lambda$, and their sum is bounded by the third term.</p>
+    <p>The extracted text of Lemma 10.4 states a bound with $1 / (1 - \gamma)$ and no $G_\infty$, but its proof
+       ends with $G_\infty / (1 - \gamma)^2$. The theorem uses the second form.</p>
+  </details>
+</section>
+
+<section>
+  <h2>Where the proof fails</h2>
+  <p>Step 3 only works if every coefficient
+     $\frac{\sqrt{\hat{v}_{t,i}}}{\alpha_t} - \frac{\sqrt{\hat{v}_{t-1,i}}}{\alpha_{t-1}}$ is non-negative.
+     Only then can each $(\theta_{t,i} - \theta^*_i)^2$ be replaced by its upper bound $D_\infty^2$. That
+     requires $\sqrt{\hat{v}_t} / \alpha_t$ to never decrease. For SGD and AdaGrad it doesn't. For Adam it can:
+     $\hat{v}_t$ is an exponential moving average, so it drops whenever recent gradients are smaller than old ones.</p>
+  <p><a href="https://arxiv.org/abs/1904.09237">Reddi et al. (2018)</a> turn this into a counterexample. On
+     $\mathcal{X} = [-1, 1]$, with $C \gt 2$, let</p>
+  $$f_t(x) = \begin{cases} C x & t \bmod 3 = 1 \\ -x & \text{otherwise} \end{cases}$$
+  <p>Every three steps the costs add up to $(C - 2) x$, so the best point is $x = -1$. Adam with $\beta_1 = 0$ and
+     $\beta_2 = 1 / (1 + C^2)$ moves towards $x = +1$ instead. The large gradient $C$ that carries the
+     information arrives once every three steps. Dividing by $\sqrt{\hat{v}_t}$ shrinks it to a step about the same size as
+     each $-1$ step, and $\hat{v}_t$ decays before the next one arrives. Two steps towards $+1$ outweigh one step
+     towards $-1$, and the regret grows linearly in $T$.</p>
+  <p>We ran this problem with the <a href="adam.html">implementation here</a>, using $\alpha_t = 0.5 / \sqrt{t}$
+     and projecting onto $[-1, 1]$ after every step. For $C = 3$ and $C = 10$, Adam ends at exactly $x = +1$.</p>
+  <aside class="note">Reddi et al. fix the proof with <strong>AMSGrad</strong>, which divides by the running
+     maximum $\max(\hat{v}_{t-1}, v_t)$ instead of $\hat{v}_t$. That makes $\sqrt{\hat{v}_t} / \alpha_t$
+     non-decreasing by construction. On the same problem, PyTorch's <code>torch.optim.Adam(amsgrad=True)</code>
+     ends below $x = -0.9$. In practice Adam rarely runs into this, but the convergence guarantee in the
+     paper does not cover it.</aside>
+</section>

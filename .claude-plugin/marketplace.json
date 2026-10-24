@@ -1,0 +1,19 @@
+{
+  "name": "annotated-implementation",
+  "owner": {
+    "name": "Varuna Jayasiri"
+  },
+  "metadata": {
+    "description": "Annotated, tested implementations of research papers as side-by-side HTML pages."
+  },
+  "plugins": [
+    {
+      "name": "annotated-implementation",
+      "source": "./",
+      "description": "Implement a research paper (or take existing Python code) and publish it as a tested, side-by-side annotated HTML walkthrough with KaTeX math next to the code.",
+      "version": "0.1.0",
+      "license": "MIT",
+      "category": "documentation"
+    }
+  ]
+}

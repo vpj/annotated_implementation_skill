@@ -1,0 +1,4 @@
+# Needed by the skill itself.
+# scripts/build.py and scripts/highlight.py use only the Python standard library (Python 3.8+).
+# scripts/paper_text.py extracts text from paper PDFs:
+pypdf>=4.0

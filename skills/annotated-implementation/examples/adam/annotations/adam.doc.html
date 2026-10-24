@@ -1,0 +1,145 @@
+---
+title: Adam Optimizer
+summary: Annotated PyTorch implementation of the Adam optimizer, with the bias-correction derivation and an analysis of its step size.
+code: ../adam/adam.py
+breadcrumbs: Adam=index.html; Adam optimizer=adam.html
+---
+
+<section data-kind="doc" data-start="1" data-expect="import math">
+  <h1>Adam Optimizer</h1>
+  <p>This is a <a href="https://pytorch.org">PyTorch</a> implementation of Algorithm 1 from
+     <a href="https://arxiv.org/abs/1412.6980">Adam: A Method for Stochastic Optimization</a>.</p>
+  <p>For each parameter, Adam keeps an exponential moving average of the gradient $m_t$ and of the
+     squared gradient $v_t$, corrects both for starting at zero, and steps by their ratio:</p>
+  \begin{align*}
+  m_t &= \beta_1 m_{t-1} + (1 - \beta_1) g_t \\
+  v_t &= \beta_2 v_{t-1} + (1 - \beta_2) g_t^2 \\
+  \hat{m}_t &= \frac{m_t}{1 - \beta_1^t} \qquad \hat{v}_t = \frac{v_t}{1 - \beta_2^t} \\
+  \theta_t &= \theta_{t-1} - \alpha \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}
+  \end{align*}
+  <p>where $g_t$ is the gradient of the loss at step $t$ with respect to the parameters $\theta_{t-1}$,
+     and all operations are element-wise; $g_t^2$ is $g_t \odot g_t$.</p>
+</section>
+
+<section data-kind="doc" data-start="8" data-expect="class Adam(Optimizer):">
+  <h2>Adam</h2>
+  <p>We subclass <code>torch.optim.Optimizer</code>, which handles parameter groups and per-parameter
+     state for us. All we have to write is the update for a single parameter tensor.</p>
+</section>
+
+<section data-start="9" data-expect="def __init__(self, params: Iterable, lr: float = 1e-3">
+  <p>The defaults are the paper's: step size $\alpha = 0.001$, decay rates $\beta_1 = 0.9$ and
+     $\beta_2 = 0.999$, and $\epsilon = 10^{-8}$.</p>
+  <p>$\beta_1$ and $\beta_2$ must be in $[0, 1)$. At $\beta = 1$ the moving average would never move,
+     and the bias correction below would divide by zero.</p>
+</section>
+
+<section data-start="19" data-expect="@torch.no_grad()">
+  <h3>Take a step</h3>
+  <p>The optional <code>closure</code> re-evaluates the loss, as PyTorch's optimizers allow. Updates are
+     made without tracking gradients; parameters without a gradient are skipped.</p>
+</section>
+
+<section data-start="33" data-expect="def update(self, param: torch.Tensor, group: dict):">
+  <h3>Update one parameter</h3>
+</section>
+
+<section data-start="38" data-expect="state = self.state[param]">
+  <p>On the first update, initialize $t = 0$, $m_0 = 0$ and $v_0 = 0$. Starting the averages at
+     zero is what makes them biased, as we will see.</p>
+</section>
+
+<section data-start="44" data-expect="beta1, beta2 = group['betas']">
+  <p>$t \leftarrow t + 1$</p>
+</section>
+
+<section data-start="48" data-expect="m.mul_(beta1).add_(grad, alpha=1 - beta1)">
+  <p>$m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t$, the biased estimate of the first moment (the mean)
+     of the gradient.</p>
+</section>
+
+<section data-start="49" data-expect="v.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)">
+  <p>$v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t^2$, the biased estimate of the second raw moment
+     (the uncentered variance) of the gradient.</p>
+</section>
+
+<section data-kind="doc" data-start="51" data-expect="bias_correction1 = 1 - beta1 ** t">
+  <h4>Bias correction</h4>
+  <p>Because $v_0 = 0$, early values of $v_t$ are too small. To see by how much, unroll the recursion:</p>
+  \begin{align*}
+  v_1 &= (1 - \beta_2) g_1^2 \\
+  v_2 &= (1 - \beta_2) \big( \beta_2 g_1^2 + g_2^2 \big) \\
+  v_3 &= (1 - \beta_2) \big( \beta_2^2 g_1^2 + \beta_2 g_2^2 + g_3^2 \big) \\
+  v_t &= (1 - \beta_2) \sum_{i=1}^{t} \beta_2^{t-i} g_i^2
+  \end{align*}
+  <p>Take expectations. If the distribution of gradients does not change over time,
+     $\mathbb{E}[g_i^2] = \mathbb{E}[g_t^2]$ for every $i$ and it comes out of the sum:</p>
+  \begin{align*}
+  \mathbb{E}[v_t] &= (1 - \beta_2) \sum_{i=1}^{t} \beta_2^{t-i} \, \mathbb{E}[g_i^2] \\
+  &= \mathbb{E}[g_t^2] \cdot (1 - \beta_2) \sum_{i=1}^{t} \beta_2^{t-i} + \zeta \\
+  &= \mathbb{E}[g_t^2] \cdot (1 - \beta_2^t) + \zeta
+  \end{align*}
+  <p>The last step is the geometric series
+     $(1 - \beta_2)(1 + \beta_2 + \dots + \beta_2^{t-1}) = 1 - \beta_2^t$.
+     $\zeta$ is the error from the distribution drifting over time. It is zero if the distribution is
+     stationary, and small otherwise, because the weights $\beta_2^{t-i}$ give little weight to old gradients.</p>
+  <p>So $v_t$ underestimates the second moment by a factor of $1 - \beta_2^t$, and dividing by it removes
+     the bias. The same argument for $m_t$ gives the factor $1 - \beta_1^t$:</p>
+  $$\hat{m}_t = \frac{m_t}{1 - \beta_1^t} \qquad \hat{v}_t = \frac{v_t}{1 - \beta_2^t}$$
+  <p>The correction matters most when $\beta_2$ is close to 1. At $t = 10$ with the defaults,
+     $1 - \beta_1^t \approx 0.65$ but $\sqrt{1 - \beta_2^t} \approx 0.1$. Without correction, the early steps
+     would be about $6.5$ times too large. A $\beta_2$ close to 1 is exactly what sparse gradients need,
+     since many steps must be averaged to estimate $v_t$.</p>
+</section>
+
+<section data-kind="doc" data-start="53" data-expect="alpha_t = group['lr'] * math.sqrt(bias_correction2) / bias_correction1">
+  <p>Instead of computing $\hat{m}_t$ and $\hat{v}_t$ as new tensors, we fold both corrections into
+     scalars, as Section 2 of the paper suggests:</p>
+  \begin{align*}
+  \alpha \frac{\hat{m}_t}{\sqrt{\hat{v}_t} + \epsilon}
+  &= \alpha \frac{m_t / (1 - \beta_1^t)}{\sqrt{v_t} / \sqrt{1 - \beta_2^t} + \epsilon} \\
+  &= \alpha \frac{\sqrt{1 - \beta_2^t}}{1 - \beta_1^t} \cdot \frac{m_t}{\sqrt{v_t} + \epsilon \sqrt{1 - \beta_2^t}} \\
+  &= \alpha_t \frac{m_t}{\sqrt{v_t} + \hat{\epsilon}}
+  \end{align*}
+  <p>with $\alpha_t = \alpha \frac{\sqrt{1 - \beta_2^t}}{1 - \beta_1^t}$ and
+     $\hat{\epsilon} = \epsilon \sqrt{1 - \beta_2^t}$.</p>
+  <aside class="note">The paper writes the efficient form with $\hat{\epsilon}$ but does not say what it is.
+     With $\hat{\epsilon} = \epsilon \sqrt{1 - \beta_2^t}$ the update is identical to Algorithm 1; using
+     $\epsilon$ there instead would make the effective $\epsilon$ grow as $1 / \sqrt{1 - \beta_2^t}$ during
+     the first few thousand steps. PyTorch's <code>torch.optim.Adam</code> makes the same choice.</aside>
+</section>
+
+<section data-kind="doc" data-start="56" data-expect="param.addcdiv_(m, v.sqrt().add_(eps_hat), value=-alpha_t)">
+  <p>$\theta_t = \theta_{t-1} - \alpha_t \frac{m_t}{\sqrt{v_t} + \hat{\epsilon}}$</p>
+
+  <h4>How big are the steps?</h4>
+  <p>Ignoring $\epsilon$, the step taken in parameter space is
+     $\Delta_t = \alpha \frac{\hat{m}_t}{\sqrt{\hat{v}_t}}$. Three things follow.</p>
+  <p><strong>Its size does not depend on the scale of the gradients.</strong> Multiplying every gradient by
+     $c$ multiplies $\hat{m}_t$ by $c$ and $\hat{v}_t$ by $c^2$, which cancel:
+     $\frac{c \hat{m}_t}{\sqrt{c^2 \hat{v}_t}} = \frac{\hat{m}_t}{\sqrt{\hat{v}_t}}$.</p>
+  <p><strong>It is usually no bigger than $\alpha$.</strong> $\hat{m}_t$ estimates $\mathbb{E}[g]$ and
+     $\hat{v}_t$ estimates $\mathbb{E}[g^2]$, and by Jensen's inequality
+     $\mathbb{E}[g]^2 \le \mathbb{E}[g^2]$, so $\big| \hat{m}_t / \sqrt{\hat{v}_t} \big| \lesssim 1$ and
+     $|\Delta_t| \lesssim \alpha$. The step size $\alpha$ acts as a trust region: it sets how far one step
+     can move, which is often easier to choose than a learning rate for raw gradients. The paper calls
+     $\hat{m}_t / \sqrt{\hat{v}_t}$ the signal-to-noise ratio. When gradients disagree from step to step, as they
+     do near an optimum, it shrinks, and the steps shrink with it.</p>
+  <p><strong>Sparse gradients give larger steps.</strong> Suppose a gradient has been zero at every step
+     except the current one. Then $m_t = (1 - \beta_1) g_t$ and $v_t = (1 - \beta_2) g_t^2$, so</p>
+  $$|\Delta_t| = \alpha \frac{1 - \beta_1}{\sqrt{1 - \beta_2}} \cdot \frac{\sqrt{1 - \beta_2^t}}{1 - \beta_1^t}$$
+  <p>which approaches $\alpha \frac{1 - \beta_1}{\sqrt{1 - \beta_2}} \approx 3.16 \alpha$ for the default
+     $\beta_1$ and $\beta_2$. The paper gives this as the upper bound on the step.</p>
+  <aside class="note">It is not quite an upper bound. Split each term of $m_t$ as
+     $\beta_1^{t-i} g_i = \big( \beta_1^{t-i} \beta_2^{-(t-i)/2} \big) \big( \beta_2^{(t-i)/2} g_i \big)$ and apply
+     Cauchy-Schwarz. With $\rho = \beta_1^2 / \beta_2$:
+     \begin{align*}
+     |m_t| &\le (1 - \beta_1) \sqrt{\sum_{i=1}^{t} \rho^{t-i}} \sqrt{\sum_{i=1}^{t} \beta_2^{t-i} g_i^2} \\
+     &= \frac{1 - \beta_1}{\sqrt{1 - \beta_2}} \sqrt{\frac{1 - \rho^t}{1 - \rho}} \sqrt{v_t}
+     \end{align*}
+     The extra factor $1 / \sqrt{1 - \rho}$ is about $2.3$ for the defaults, so the worst-case step is about
+     $7.27 \alpha$. Equality holds when $g_i \propto (\beta_1 / \beta_2)^{t-i}$, gradients that shrink
+     towards the present. We checked numerically that this implementation reaches $6.76 \alpha$ at
+     $t = 2000$, which is the bound with its bias-correction factors included. Typical gradients stay close to
+     $\alpha$.</aside>
+</section>
