@@ -145,6 +145,12 @@ Skip diagrams that only restate one equation or that decorate.
   `var(--hl-nf)` orange, `var(--hl-m)` purple, `var(--hl-nb)` cyan, `var(--hl-bp)` green) for
   accents, so it works in both colour schemes. Use the same colour for the same kind of thing
   across a page's figures, and say what each colour means in the caption.
+- **SVG text is black unless told otherwise.** `<text>` takes its colour from `fill`, whose default
+  is black, not from the CSS `color` that `currentColor` follows; math labels inherit that fill.
+  Put `fill="currentColor"` on the `<svg>` element (and `fill="none"` on any outline-only shape),
+  or on every `<text>`. Never hard-code `black`, `white` or a grey hex for text or lines. The
+  stylesheet defaults unfilled figure text to `currentColor`, but a figure copied elsewhere or
+  saved as a standalone `.svg` does not get that rule.
 - **Math in labels:** write a label containing math as LaTeX in `$...$`, exactly as the prose
   writes it: `<text x="60" y="55" text-anchor="middle">$o_l$, $c$, $q_l$</text>`. The page
   replaces it with a typeset label at the same anchor point, and because the LaTeX is identical

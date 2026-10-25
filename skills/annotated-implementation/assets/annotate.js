@@ -262,6 +262,34 @@
             .map((t) => ({section: sectionId(t), text: t.textContent}));
     }
 
+    // Diagram text that is hard to read against the page in the current colour scheme, typically an
+    // SVG <text> or label with a hard-coded dark fill shown in dark mode (or a light one in light mode).
+    function lowContrastSvgText(root) {
+        const rgb = (c) => (c.match(/[\d.]+/g) || []).slice(0, 4).map(Number);
+        const opaque = (c) => c && c !== 'transparent' && !(rgb(c).length === 4 && rgb(c)[3] === 0);
+        const luminance = ([r, g, b]) => {
+            const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+            return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+        };
+        const background = (el) => {
+            for (let e = el; e && e.nodeType === 1; e = e.parentElement) {
+                const c = getComputedStyle(e).backgroundColor;
+                if (opaque(c)) return rgb(c);
+            }
+            return [255, 255, 255];
+        };
+        const found = [];
+        for (const el of root.querySelectorAll('figure svg text, figure svg .svg-label')) {
+            const style = getComputedStyle(el);
+            const colour = el.tagName.toLowerCase() === 'text' ? style.fill : style.color;
+            if (!colour || !colour.startsWith('rgb')) continue;
+            const [a, b] = [luminance(rgb(colour)), luminance(background(el))];
+            const contrast = (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+            if (contrast < 3) found.push({section: sectionId(el), text: el.textContent.trim().slice(0, 40), contrast: +contrast.toFixed(2)});
+        }
+        return found;
+    }
+
     function renderMath(root) {
         const base = {delimiters: DELIMITERS, ignoredClasses: ['no-math'], ...KATEX_OPTIONS};
 
@@ -364,8 +392,10 @@
         closed.forEach((d) => { d.open = false; });
         const unrenderedDollar = unrenderedDollars(root);
         const svgPlainMath = plainMathInSvg(root);
-        const report = {mathErrors, overflowing, unrenderedDollar, svgPlainMath,
-            ok: !mathErrors.length && !overflowing.length && !unrenderedDollar.length && !svgPlainMath.length};
+        const svgLowContrast = lowContrastSvgText(root);
+        const report = {mathErrors, overflowing, unrenderedDollar, svgPlainMath, svgLowContrast,
+            ok: !mathErrors.length && !overflowing.length && !unrenderedDollar.length && !svgPlainMath.length
+                && !svgLowContrast.length};
         window.annotationReport = report;
         if (report.ok) return;
 
@@ -373,11 +403,13 @@
         overflowing.forEach((e) => console.warn(`Equation wider than its column in #${e.section}:`, e.tex));
         unrenderedDollar.forEach((e) => console.warn(`Unrendered $ in #${e.section}:`, e.text));
         svgPlainMath.forEach((e) => console.warn(`Diagram label in #${e.section} looks like math but is not in $...$:`, e.text));
+        svgLowContrast.forEach((e) => console.warn(`Diagram text in #${e.section} has contrast ${e.contrast}:1 against the page:`, e.text));
         const parts = [];
         if (mathErrors.length) parts.push(`${mathErrors.length} math error(s)`);
         if (overflowing.length) parts.push(`${overflowing.length} equation(s) too wide`);
         if (unrenderedDollar.length) parts.push(`${unrenderedDollar.length} unrendered $`);
         if (svgPlainMath.length) parts.push(`${svgPlainMath.length} diagram label(s) with plain-text math`);
+        if (svgLowContrast.length) parts.push(`${svgLowContrast.length} diagram label(s) hard to read in this colour scheme`);
         const banner = document.createElement('div');
         banner.className = 'math-errors';
         banner.textContent = `${parts.join(', ')} - see console or window.annotationReport`;

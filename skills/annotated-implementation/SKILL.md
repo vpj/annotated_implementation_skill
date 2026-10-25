@@ -166,8 +166,11 @@ If the code must change after annotating, rerun the tests, rerun `--listing`, an
    measures the layout at the current width. Each page publishes a self-check once it has rendered:
    evaluate `window.annotationReport` with a JavaScript tool, or look for the red banner. It lists
    math errors, display equations wider than their column, text that still contains `$`
-   (math that was not rendered), and diagram labels with math written as plain text instead of
-   `$...$`. Fix all of them; split wide equations over lines of an `align*`.
+   (math that was not rendered), diagram labels with math written as plain text instead of
+   `$...$`, and diagram text too dark or too light to read against the page. Fix all of them; split
+   wide equations over lines of an `align*`. Run the check in **both colour schemes** (emulate
+   `prefers-color-scheme: dark` and `light`, e.g. a `colorScheme` option of the browser tool): a
+   diagram can pass in one and be unreadable in the other.
    At a desktop width (at least 900px) also look at each page: diagrams render with typeset
    labels that sit inside their boxes, sections line up
    with their code, and clicking a key symbol in an equation lights up its other occurrences.

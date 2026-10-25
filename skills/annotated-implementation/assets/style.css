@@ -533,6 +533,12 @@ pre, tt, code {
     height: auto;
 }
 
+/* SVG text defaults to fill: black, which disappears in dark mode. Zero specificity, so any fill the
+   author sets (attribute, class or inline style) still wins. */
+:where(.docs figure svg text:not([fill])) {
+    fill: currentColor;
+}
+
 .docs figcaption {
     font-size: 0.9em;
     margin-top: 5px;

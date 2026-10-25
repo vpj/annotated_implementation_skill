@@ -119,12 +119,15 @@ After rendering, every page sets `window.annotationReport`:
 
 ```js
 { mathErrors: [{tex, message}], overflowing: [{section, tex}], unrenderedDollar: [{section, text}],
-  svgPlainMath: [{section, text}], ok: true|false }
+  svgPlainMath: [{section, text}], svgLowContrast: [{section, text, contrast}], ok: true|false }
 ```
 
 and shows a red banner when anything is wrong. `overflowing` lists display equations wider than
 their column; split them over the lines of an `align*`. `svgPlainMath` lists diagram labels that look like math (LaTeX `_`, `^` or `\` outside
-`$...$`, or Unicode sub/superscripts) but are not typeset; wrap them in `$...$`. `unrenderedDollar` lists sections whose
+`$...$`, or Unicode sub/superscripts) but are not typeset; wrap them in `$...$`. `svgLowContrast` lists
+diagram text and math labels with less than 3:1 contrast against the page in the current colour
+scheme, usually a hard-coded dark fill seen in dark mode; it only sees the scheme the page is
+rendered in, so check both. `unrenderedDollar` lists sections whose
 visible text still contains `$`, usually an unbalanced delimiter (wrap literal dollar signs in
 `class="no-math"`).
 
