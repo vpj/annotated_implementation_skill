@@ -552,16 +552,33 @@ pre, tt, code {
     border-radius: 0 4px 4px 0;
 }
 
-.docs svg foreignObject.svg-math {
-    overflow: visible;
+/* Diagrams with math labels: the SVG and an HTML overlay holding the typeset labels (see
+   svgMathLabels in annotate.js). Container units let the labels scale with the drawing. */
+.docs .svg-frame {
+    position: relative;
+    max-width: 100%;
+    margin: 0 auto;
+    container-type: inline-size;
+}
+
+.docs .svg-frame > svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.docs .svg-labels {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
 }
 
 .docs .svg-label {
-    display: flex;
-    align-items: center;
-    height: 100%;
+    position: absolute;
+    transform-origin: 0 0;
     white-space: nowrap;
     line-height: 1;
+    pointer-events: auto;
 }
 
 .docs .svg-label .katex {

@@ -156,6 +156,11 @@ Skip diagrams that only restate one equation or that decorate.
   replaces it with a typeset label at the same anchor point, and because the LaTeX is identical
   to the prose, clicking the symbol in the figure lights up the prose and equations too. Never fake
   math with Unicode subscripts (`oₗ`) or plain `o_l`; the self-check reports both.
+- Never put HTML in the SVG yourself (`<foreignObject>`). WebKit (Safari) positions HTML inside it
+  without the SVG's offset and scaling, and KaTeX is built from positioned boxes, so math drawn
+  that way lands far from its label in Safari while looking right in Chrome. A `$...$` label in a
+  plain `<text>` avoids this: the page moves it into an HTML overlay on top of the drawing. The
+  `<svg>` needs a `viewBox`.
 - Labels with math are taller than plain text; leave at least one font size of space around them.
 - **Generate figures that show data or code behaviour.** When a figure shows what the code
   computes (an attention mask, a schedule's density, a sampled trajectory), write a small script
@@ -165,8 +170,12 @@ Skip diagrams that only restate one equation or that decorate.
   the markers. A hand-drawn copy drifts from the code; a generated one cannot.
 - Hand-draw only conceptual figures (boxes and arrows). Lay them out on a grid in the `viewBox`
   so boxes align, and use one arrow marker defined in `<defs>`.
-- Check every figure in the browser at desktop width: labels inside their boxes, nothing
-  clipped, math typeset.
+- **One `<path>` per arrow.** `marker-end` draws a head only at the last point of a path, so
+  `d="M0 0 H10 M20 0 H30"` gets one arrowhead, on the second segment. Each arrow is its own
+  `<path>` (or `<line>`) with its own `marker-end`.
+- Check every figure in the browser at desktop width, in both colour schemes and in both Chrome
+  and WebKit: labels inside their boxes, every arrow with a head, nothing clipped, math typeset. On
+  macOS, `scripts/webkit_check.swift` renders a page in WebKit and saves each figure as a PNG.
 
 ## The reader does not have the paper
 

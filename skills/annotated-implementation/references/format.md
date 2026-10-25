@@ -72,7 +72,7 @@ Extra styled elements:
 | Element | Use |
 |---|---|
 | `<aside class="note">` | Deviations from the paper, caveats, implementation tricks. |
-| `<figure>` + `<figcaption>` | Diagrams. Inline `<svg>` is preferred; use `currentColor` for lines and text, and the theme's token colours for accents (`var(--hl-k)` pink, `var(--hl-nf)` orange, `var(--hl-m)` purple, `var(--hl-nb)` cyan, `var(--hl-bp)` green) so it works in light and dark mode. An SVG `<text>` containing `$...$` is replaced at load time by a typeset label anchored at the same `x`, `y` (honouring `text-anchor`, `font-size`, `font-weight` and `fill`). See the writing guide for when and how to draw. |
+| `<figure>` + `<figcaption>` | Diagrams. Inline `<svg>` is preferred; use `currentColor` for lines and text, and the theme's token colours for accents (`var(--hl-k)` pink, `var(--hl-nf)` orange, `var(--hl-m)` purple, `var(--hl-nb)` cyan, `var(--hl-bp)` green) so it works in light and dark mode. An SVG `<text>` containing `$...$` is moved at load time into an HTML overlay on the drawing and typeset there, anchored at the same `x`, `y` (honouring `text-anchor`, `transform`, `font-size`, `font-weight`, `fill` and `opacity`, and scaling with the drawing). The `<svg>` needs a `viewBox`; do not use `<foreignObject>`. See the writing guide for when and how to draw. |
 | `<details><summary>` | Long proofs or side derivations the reader can expand. |
 | `class="no-math"` | On any element whose `$` signs are literal (prices, shell variables). |
 | `<span class="paper-ref">` | The paper's own label for something the prose has just restated: `<span class="paper-ref">(Eq. 3 in the paper)</span>`. Shown small and dim. The only place a paper label ("Eq. 3", "Fig. 14", "Algorithm 1", "Section 3.1", "Theorem 2"...) may appear; anywhere else the build warns. |
@@ -119,7 +119,8 @@ After rendering, every page sets `window.annotationReport`:
 
 ```js
 { mathErrors: [{tex, message}], overflowing: [{section, tex}], unrenderedDollar: [{section, text}],
-  svgPlainMath: [{section, text}], svgLowContrast: [{section, text, contrast}], ok: true|false }
+  svgPlainMath: [{section, text}], svgLowContrast: [{section, text, contrast}],
+  svgMisplaced: [{section, text, problem}], ok: true|false }
 ```
 
 and shows a red banner when anything is wrong. `overflowing` lists display equations wider than
@@ -127,7 +128,8 @@ their column; split them over the lines of an `align*`. `svgPlainMath` lists dia
 `$...$`, or Unicode sub/superscripts) but are not typeset; wrap them in `$...$`. `svgLowContrast` lists
 diagram text and math labels with less than 3:1 contrast against the page in the current colour
 scheme, usually a hard-coded dark fill seen in dark mode; it only sees the scheme the page is
-rendered in, so check both. `unrenderedDollar` lists sections whose
+rendered in, so check both. `svgMisplaced` lists diagram labels whose typeset math is drawn away
+from the label, or labels that stick out of their drawing. `unrenderedDollar` lists sections whose
 visible text still contains `$`, usually an unbalanced delimiter (wrap literal dollar signs in
 `class="no-math"`).
 

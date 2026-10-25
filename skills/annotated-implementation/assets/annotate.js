@@ -210,47 +210,86 @@
         return byRaw;
     }
 
-    const SVG_NS = 'http://www.w3.org/2000/svg';
-
-    // KaTeX output is HTML, which cannot live inside an SVG <text>. Every <text> whose content
-    // contains `$` is replaced by a <foreignObject> anchored at the same point (honouring
-    // text-anchor, font size, weight and fill) holding an HTML label, which renderMath then typesets.
-    // The label scales with the SVG's viewBox like the text it replaces.
-    function svgMathLabels(root) {
-        for (const text of root.querySelectorAll('svg text')) {
-            if (!text.textContent.includes('$')) continue;
-            const svg = text.ownerSVGElement;
-            const box = svg.viewBox && svg.viewBox.baseVal;
-            const width = box && box.width ? box.width : svg.getBoundingClientRect().width;
-            const x = parseFloat(text.getAttribute('x') || '0');
-            const y = parseFloat(text.getAttribute('y') || '0');
-            const style = getComputedStyle(text);
-            const size = parseFloat(style.fontSize);
-            const anchor = style.textAnchor;
-            const half = Math.max(Math.min(x, width - x), size);
-            const [left, span, justify] = anchor === 'middle' ? [x - half, 2 * half, 'center']
-                : anchor === 'end' ? [x - Math.max(x, size), Math.max(x, size), 'flex-end']
-                : [x, Math.max(width - x, size), 'flex-start'];
-
-            const fo = document.createElementNS(SVG_NS, 'foreignObject');
-            fo.setAttribute('x', left);
-            fo.setAttribute('y', y - 1.85 * size);
-            fo.setAttribute('width', span);
-            fo.setAttribute('height', 3 * size);
-            fo.setAttribute('class', 'svg-math');
-            if (text.hasAttribute('transform')) fo.setAttribute('transform', text.getAttribute('transform'));
-            const label = document.createElement('div');
-            label.className = 'svg-label';
-            label.style.fontSize = `${size}px`;
-            label.style.fontWeight = style.fontWeight;
-            label.style.justifyContent = justify;
-            if (style.fill && style.fill !== 'none') label.style.color = style.fill;
-            const line = document.createElement('span');
-            line.textContent = text.textContent;
-            label.appendChild(line);
-            fo.appendChild(label);
-            text.replaceWith(fo);
+    // The transform from an element's own coordinates to its <svg>'s user (viewBox) coordinates,
+    // from the `transform` attributes of the element and its ancestors. Needs no layout.
+    function svgMatrix(el, svg) {
+        let m = svg.createSVGMatrix();
+        for (let e = el; e && e !== svg; e = e.parentNode) {
+            const t = e.transform && e.transform.baseVal.consolidate();
+            if (t) m = t.matrix.multiply(m);
         }
+        return m;
+    }
+
+    // KaTeX output is HTML, so it cannot go inside an SVG <text>. A <foreignObject> is not the
+    // answer either: WebKit (Safari) lays out positioned content inside one without the
+    // foreignObject's offset or the SVG's scaling, and KaTeX is built from positioned boxes, so the
+    // math lands far from where it belongs. Instead, each <text> containing `$` is moved out of the
+    // SVG into an HTML overlay on top of it. The label sits at the text's anchor point in percent of
+    // the viewBox, honours text-anchor, rotation, font size, weight, fill and opacity, and is sized in
+    // container units, so it moves and scales with the drawing at any width.
+    function svgMathLabels(root) {
+        for (const svg of root.querySelectorAll('figure svg')) {
+            const texts = [...svg.querySelectorAll('text')].filter((t) => t.textContent.includes('$'));
+            const box = svg.viewBox && svg.viewBox.baseVal;
+            if (!texts.length || !box || !box.width) continue;
+
+            const frame = document.createElement('div');
+            frame.className = 'svg-frame';
+            const width = svg.getAttribute('width') || '100%';
+            frame.style.width = /^[\d.]+$/.test(width) ? `${width}px` : width;
+            svg.replaceWith(frame);
+            frame.appendChild(svg);
+            svg.setAttribute('width', '100%');
+            const overlay = document.createElement('div');
+            overlay.className = 'svg-labels';
+            frame.appendChild(overlay);
+
+            for (const text of texts) {
+                const style = getComputedStyle(text);
+                const m = svgMatrix(text, svg);
+                const p = svg.createSVGPoint();
+                p.x = parseFloat(text.getAttribute('x') || '0');
+                p.y = parseFloat(text.getAttribute('y') || '0');
+                const at = p.matrixTransform(m);
+                const angle = Math.atan2(m.b, m.a) * 180 / Math.PI;
+                const shift = {middle: '-50%', end: '-100%'}[style.textAnchor] || '0';
+
+                const label = document.createElement('div');
+                label.className = 'svg-label';
+                label.style.left = `${(at.x - box.x) / box.width * 100}%`;
+                label.style.top = `${(at.y - box.y) / box.height * 100}%`;
+                label.style.fontSize = `calc(${parseFloat(style.fontSize) / box.width} * 100cqw)`;
+                label.style.transform = `rotate(${angle}deg) translate(${shift}, calc(-50% - 0.35em))`;
+                label.style.fontWeight = style.fontWeight;
+                label.style.opacity = style.opacity;
+                if (style.fill && style.fill.startsWith('rgb')) label.style.color = style.fill;
+                label.textContent = text.textContent;
+                overlay.appendChild(label);
+                text.remove();
+            }
+        }
+    }
+
+    // Diagram labels whose typeset math is not where the label is, or labels that stick out of their
+    // diagram. Either means the drawing is broken in this browser or the label is placed off the
+    // figure; both look wrong to the reader even when every equation rendered.
+    function misplacedSvgLabels(root) {
+        const found = [];
+        const outside = (inner, outer, slack) => inner.width > 0 && (inner.left < outer.left - slack
+            || inner.right > outer.right + slack || inner.top < outer.top - slack || inner.bottom > outer.bottom + slack);
+        for (const label of root.querySelectorAll('.svg-label')) {
+            if (label.offsetParent === null) continue;
+            const rect = label.getBoundingClientRect();
+            const em = parseFloat(getComputedStyle(label).fontSize);
+            const frame = label.closest('.svg-frame').getBoundingClientRect();
+            const strayMath = [...label.querySelectorAll('.katex-html')].some((k) => outside(k.getBoundingClientRect(), rect, em));
+            if (strayMath || outside(rect, frame, 2)) {
+                found.push({section: sectionId(label), text: label.textContent.trim().slice(0, 40),
+                    problem: strayMath ? 'math drawn away from its label' : 'label outside its diagram'});
+            }
+        }
+        return found;
     }
 
     // SVG labels that look like math but are plain text: LaTeX syntax outside `$...$`, or Unicode
@@ -279,7 +318,7 @@
             return [255, 255, 255];
         };
         const found = [];
-        for (const el of root.querySelectorAll('figure svg text, figure svg .svg-label')) {
+        for (const el of root.querySelectorAll('figure svg text, figure .svg-label')) {
             const style = getComputedStyle(el);
             const colour = el.tagName.toLowerCase() === 'text' ? style.fill : style.color;
             if (!colour || !colour.startsWith('rgb')) continue;
@@ -393,9 +432,10 @@
         const unrenderedDollar = unrenderedDollars(root);
         const svgPlainMath = plainMathInSvg(root);
         const svgLowContrast = lowContrastSvgText(root);
-        const report = {mathErrors, overflowing, unrenderedDollar, svgPlainMath, svgLowContrast,
+        const svgMisplaced = misplacedSvgLabels(root);
+        const report = {mathErrors, overflowing, unrenderedDollar, svgPlainMath, svgLowContrast, svgMisplaced,
             ok: !mathErrors.length && !overflowing.length && !unrenderedDollar.length && !svgPlainMath.length
-                && !svgLowContrast.length};
+                && !svgLowContrast.length && !svgMisplaced.length};
         window.annotationReport = report;
         if (report.ok) return;
 
@@ -404,12 +444,14 @@
         unrenderedDollar.forEach((e) => console.warn(`Unrendered $ in #${e.section}:`, e.text));
         svgPlainMath.forEach((e) => console.warn(`Diagram label in #${e.section} looks like math but is not in $...$:`, e.text));
         svgLowContrast.forEach((e) => console.warn(`Diagram text in #${e.section} has contrast ${e.contrast}:1 against the page:`, e.text));
+        svgMisplaced.forEach((e) => console.warn(`Diagram label in #${e.section}: ${e.problem}:`, e.text));
         const parts = [];
         if (mathErrors.length) parts.push(`${mathErrors.length} math error(s)`);
         if (overflowing.length) parts.push(`${overflowing.length} equation(s) too wide`);
         if (unrenderedDollar.length) parts.push(`${unrenderedDollar.length} unrendered $`);
         if (svgPlainMath.length) parts.push(`${svgPlainMath.length} diagram label(s) with plain-text math`);
         if (svgLowContrast.length) parts.push(`${svgLowContrast.length} diagram label(s) hard to read in this colour scheme`);
+        if (svgMisplaced.length) parts.push(`${svgMisplaced.length} diagram label(s) out of place`);
         const banner = document.createElement('div');
         banner.className = 'math-errors';
         banner.textContent = `${parts.join(', ')} - see console or window.annotationReport`;

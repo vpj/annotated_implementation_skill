@@ -170,7 +170,13 @@ If the code must change after annotating, rerun the tests, rerun `--listing`, an
    `$...$`, and diagram text too dark or too light to read against the page. Fix all of them; split
    wide equations over lines of an `align*`. Run the check in **both colour schemes** (emulate
    `prefers-color-scheme: dark` and `light`, e.g. a `colorScheme` option of the browser tool): a
-   diagram can pass in one and be unreadable in the other.
+   diagram can pass in one and be unreadable in the other. The report also lists diagram labels out
+   of place (typeset math away from its label, or a label outside its drawing).
+   Browser tools are usually Chromium; Safari's WebKit lays out some things differently. On macOS,
+   also run every page that has a figure through WebKit, in both schemes, and look at the PNGs:
+   `swift <skill>/scripts/webkit_check.swift <page url> <out dir> dark` (then `light`). It prints
+   the same report and exits non-zero if it is not ok. On other systems, ask the user to open the
+   pages in Safari if they use it.
    At a desktop width (at least 900px) also look at each page: diagrams render with typeset
    labels that sit inside their boxes, sections line up
    with their code, and clicking a key symbol in an equation lights up its other occurrences.
