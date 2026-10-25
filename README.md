@@ -1,5 +1,7 @@
 [![X](https://img.shields.io/twitter/follow/vpj?style=social)](https://x.com/vpj)
 
+![Adam optimizer page: explanations and equations on the left, the code they describe on the right](docs/images/adam-dark.webp)
+
 # Annotated Research Paper Implementation
 
 This is [Claude Code](https://claude.com/claude-code) skill to implement research paper like
@@ -26,10 +28,8 @@ or of code you already have:
 > Turn `my_algorithm.py` into an annotated walkthrough with the math next to the code.
 
 Claude first asks how much to implement and how deep the explanations should go, writes and tests
-the code, checks in with you along the way, and then builds pages like this one, from the
-[Adam example](skills/annotated-implementation/examples/adam):
-
-![Adam optimizer page: explanations and equations on the left, the code they describe on the right](docs/images/adam-dark.webp)
+the code, checks in with you along the way, and then builds pages like this:
+[Adam example](skills/annotated-implementation/examples/adam)
 
 ## Install
 
