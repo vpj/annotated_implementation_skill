@@ -6,22 +6,25 @@ want it?"
 
 ## Page types
 
-**Overview page** (usually prose only, or annotating the package's `__init__.py`)
+The code is the subject; the writing exists to explain it. Every explanation sits next to the code
+it explains, on the page of the file that contains that code.
+
+**Index page** (prose only; the only page without code)
 - `<h1>` with the method's name.
 - First paragraph: "This is a [PyTorch](https://pytorch.org) implementation of
-  [<paper title>](<arXiv abs URL>)." Then one paragraph of intuition: what problem the method
-  solves, what was wrong with what came before, and the one key idea.
-- Links to every other page with one line each on what it covers.
+  [<paper title>](<arXiv abs URL>)." Then a short description of what the paper does.
+- A link to every code page with one line on what it implements.
 - If the method builds on other papers implemented here, say so and link those pages.
+- Nothing else: derivations, figures and results belong on the code pages, beside their code.
 
-**Component page** (a model, loss, algorithm)
-- `<h1>` + paper link + one or two paragraphs of context, above the imports.
+**Code page** (one Python file: a model, loss, algorithm, or the helpers they use)
+- `<h1>` + paper link + the introduction to this file's code, above the imports.
 - An `<h2>` section per class or top-level function, above its definition, containing the
   derivation or equations it implements.
 - `<h3>` for methods that need their own explanation (`forward`, `__call__`, a sampling step).
 - `<h4>` for named sub-steps inside a method.
 
-**Experiment page**
+**Experiment page** (the experiment's own file, e.g. `experiment.py`)
 - What is trained on what, and what result to expect (numbers, curves, time on what hardware).
 - Configuration values explained where they are set, especially ones that differ from the paper.
 
@@ -111,7 +114,9 @@ Follow the depth the user chose:
   the error. If the paper's claim holds for typical inputs, say that too.
 - When a published result (a proof, a theorem) is known to be wrong, cite the work that showed it,
   explain where the argument fails, and back it with a test if the failure can be reproduced.
-- No filler ("In this section we will..."), no marketing words, no emojis.
+- No filler ("In this section we will...", "This page implements...", "On this page the target
+  is..."), no marketing words, no emojis. Pages do not narrate themselves; say the thing directly
+  ("Here the target is a single class $t$", or just "For a hard target $t$...").
 
 ## Diagrams
 

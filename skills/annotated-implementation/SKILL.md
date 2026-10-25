@@ -33,8 +33,8 @@ writing, not all of it:
 |---|---|
 | plain code | `adam/adam.py`, `adam/adamax.py` |
 | tests, including tests of the paper's claims | `tests/test_adam.py`, `tests/test_adamax.py`; a published counterexample in `tests/test_convergence_counterexample.py`; `tests/conftest.py`, `tests/helpers.py` |
-| an overview page | `annotations/index.doc.html` |
-| a component page: section granularity, doc vs note sections, derivations above the code they justify, notes correcting the paper | `annotations/adam.doc.html` |
+| the index page | `annotations/index.doc.html` |
+| a code page: section granularity, doc vs note sections, derivations above the code they justify, notes correcting the paper | `annotations/adam.doc.html` |
 | a derivation by limits, and a correction backed by a test | `annotations/adamax.doc.html` |
 | a prose-only theorem and proof page | `annotations/convergence.doc.html` |
 
@@ -56,10 +56,15 @@ then end your turn and wait for the user's answer. Silence is not approval.
    to quote the paper's equations and proofs again. If `pypdf` is missing, install it.
 2. List the paper's components (models, losses, algorithms, training procedure) and the **prior
    papers it depends on** (e.g. PPO depends on GAE for advantages).
-3. Draft a **page plan**: an overview page, a page per component worth its own explanation, a page
-   per dependency that will be implemented, and an optional experiment page. One line per page
-   saying what it covers and which code file it annotates, plus the diagrams it will carry
-   (architecture, token layout, mask, loop, density...; see the writing guide's "Diagrams").
+3. Draft a **page plan**. A page is one annotated code file, as on nn.labml.ai: plan the files
+   first, the way the code would be organised anyway (the paper's loss, model or optimizer, a file
+   per dependency that will be implemented, helpers they need, and the experiment in its own file,
+   e.g. `experiment.py`). Each page carries the explanation of its own code, next to that code: the
+   introduction to a loss goes at the top of the loss's file, its derivations above the functions
+   they justify. The index is the only page without code: a short description of the paper and a
+   link to each code page with one line on what it implements. One line per page saying which code
+   file it annotates and what it covers, plus the diagrams it will carry (architecture, token
+   layout, mask, loop, density...; see the writing guide's "Diagrams").
 
 If the user handed you existing code instead of a paper, the plan maps their files to pages, and
 Phase 3 becomes "strip comments/docstrings into notes, add tests, run them".
