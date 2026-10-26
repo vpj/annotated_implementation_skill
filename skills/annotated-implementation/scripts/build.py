@@ -131,6 +131,44 @@ def code_warnings(code: str, path: Path):
     return warnings
 
 
+SUBHEADING_RE = re.compile(r'<h[2-4][\s>]', re.I)
+
+
+def definition_warnings(sections, code: str, doc_path: Path):
+    """
+    Each top-level function and class gets its own section, so a heading or note never has to explain
+    code the reader cannot tell apart. A heading that covers several definitions goes in a section without
+    data-start, or the definitions belong together in a class.
+    """
+    starts = []
+    for node in ast.parse(code).body:
+        if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            first = min([node.lineno] + [d.lineno for d in node.decorator_list])
+            starts.append((first, node.name))
+    warnings = []
+    heading_on_code = None
+    for s in sections:
+        has_heading = SUBHEADING_RE.search(s['html']) is not None
+        if not s.get('code'):
+            if has_heading:
+                heading_on_code = None
+            continue
+        start, chunk = s['code']
+        names = [name for line, name in starts if start <= line < start + len(chunk)]
+        if len(names) > 1:
+            warnings.append(f'{doc_path}:{s["line"]}: section covers {len(names)} definitions '
+                            f'({", ".join(names)}); start a section at each one, put a heading that covers '
+                            f'several of them in a section without data-start, or group them in a class')
+        opens_definition = any(line == start for line, _ in starts)
+        if has_heading:
+            heading_on_code = names[0] if opens_definition and names else None
+        elif opens_definition and heading_on_code is not None:
+            warnings.append(f'{doc_path}:{s["line"]}: {names[0]} has no heading and sits under the heading of '
+                            f'{heading_on_code}; give it its own heading, or move the shared heading into a '
+                            f'section without data-start above both')
+    return warnings
+
+
 def paper_reference_warnings(sections, path: Path):
     """
     The reader does not have the paper open, so a bare "Eq. 3" or "Algorithm 1" tells them nothing.
@@ -260,6 +298,7 @@ def build_page(doc_path: Path, template: str):
             raise BuildError(f'{code_path}:{e.lineno}: syntax error: {e.msg}')
         warnings += code_warnings(code, code_path)
         slice_code(sections, code.split('\n'), doc_path, code_path)
+        warnings += definition_warnings(sections, code, doc_path)
         highlighted = highlight_python(code)
         for s in sections:
             if s.get('code'):

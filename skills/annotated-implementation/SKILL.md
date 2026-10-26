@@ -109,6 +109,15 @@ below; adapt to an existing project). **Wait for approval.**
 
 1. Write the modules: clear names, type hints, no comments, no docstrings. Follow the paper's
    notation in variable names where it stays readable (`log_pi`, `advantage`, `clip_eps`).
+   - Give each function and class its own section later, so keep related functions together in a
+     class when they share a purpose (a config and the constructors that fill it become
+     classmethods; a value and the methods that derive from it become a class).
+   - Format the code like black does: a call, signature, literal or import that does not fit on
+     one line gets **one item per line**, with a trailing comma. Never wrap so that some lines hold
+     two items and others one. Run the project's formatter, or
+     `black --line-length 120 --skip-string-normalization`, then read the result. Where black splits
+     an expression badly (an operator between two wrapped calls, a call wrapped inside another
+     call), name the parts in local variables instead.
 2. Write tests in `tests/` that show the code is **correct**, not merely that it runs:
    - a naive or explicit version of the paper's formula against the optimized implementation
      (e.g. a recursive advantage estimator against the explicit discounted sum);
@@ -191,6 +200,8 @@ If the code must change after annotating, rerun the tests, rerun `--listing`, an
 ## Rules
 
 - Code files stay plain. If something needs explaining, it goes in the annotation.
+- Write all prose in ASD-STE100 Simplified Technical English (short sentences, one topic per
+  sentence, active voice, simple words, no idioms). See `references/writing-guide.md`.
 - Tests never appear in the pages and pages never link to them.
 - Never skip a checkpoint because the change seems small or the user seems busy.
 - Write every symbol with identical LaTeX everywhere on a page (`\hat{A}_t`, never sometimes

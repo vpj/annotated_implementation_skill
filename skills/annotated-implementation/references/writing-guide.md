@@ -32,7 +32,14 @@ it explains, on the page of the file that contains that code.
 
 Choose split points so each section's prose explains exactly the code beside it.
 
-- Start a section at every class and function definition.
+- Start a section at every class and function definition. The build warns when a section covers
+  more than one top-level definition.
+- A heading names only the code in its own section. When one heading introduces several functions
+  (four weight functions, two helpers for one derivation), put the heading and the shared
+  explanation in a section **without** `data-start`, above the functions, and give each function
+  its own short section below it. Better still, when the functions belong together, group them in a
+  class and put the heading on the class. The build warns when a definition without a heading sits
+  under the heading of a different definition.
 - Inside a function, start a section at each step that corresponds to an equation or a decision
   in the paper. A one-line section showing the equation that line computes is the most useful
   kind:
@@ -98,14 +105,54 @@ Follow the depth the user chose:
   proofs in `<details><summary>Proof</summary>...</details>` so the main flow stays readable.
 - When skipping a proof, link it and say what it shows.
 
-## Voice
+## Language: Simplified Technical English
 
-- Plain and direct, first person plural ("we take the minimum so that..."). Short sentences.
-- Explain **why**, not what. "Clip the ratio" restates the code; "the minimum means the gradient
-  only pulls $\pi_\theta$ back towards $\pi_{\theta_{old}}$ once the ratio leaves
-  $[1 - \epsilon, 1 + \epsilon]$, which keeps the update from collapsing the policy" explains it.
-- Be honest about trade-offs and uncertainty: "this introduces bias but reduces variance a lot",
-  "the paper does not state this value; we use 0.95".
+Write all prose in [ASD-STE100 Simplified Technical English](https://www.asd-ste100.org/).
+Readers of these pages are often not native English speakers, and they read slowly, next to math
+and code. Simple, regular sentences let them spend their attention on the method.
+
+**Sentences**
+- Descriptive sentences have at most 25 words. Instructions ("Run...", "Set...") have at most 20.
+- One topic per sentence. Split "A, and B, so C" into two or three sentences.
+- Paragraphs have at most six sentences and one topic.
+- Use the active voice: "The sampler logs the top-$k$ log-probabilities", not "The top-$k$
+  log-probabilities are logged".
+- Use simple tenses: present for what the method does, past for what an experiment measured.
+- Put a condition first: "If $p = q$, the correction is zero."
+- Use a vertical list for steps, conditions or more than two parallel items.
+
+**Words**
+- Use simple, common words, each with one meaning: "use", not "leverage"; "show", not
+  "demonstrate"; "start", not "kick off"; "about", not "roughly speaking".
+- No phrasal verbs ("set up", "carry out", "end up"), no idioms and no metaphors ("with nothing to
+  hide behind", "the trainer chases the sampler"). Say what happens.
+- Use one term for one thing on every page. If it is the "sampler", it is never also "the inference
+  engine" or "the generator".
+- Keep the articles: "the gradient of the loss", not "gradient of loss".
+- At most three nouns in a row: "the tail mass of the sampler", not "sampler tail mass ratio".
+- Avoid "-ing" words as nouns or adjectives where a simple verb works: "When you clip the ratio",
+  not "Clipping the ratio".
+- No contractions.
+- Technical names (policy gradient, logits, importance sampling, KL divergence) and the names in the
+  code are allowed. Define each one the first time it appears.
+
+**Example**
+
+Before: "Distilling towards a fixed teacher would converge. Here the sampler is a biased copy of the
+trainer and is re-copied after every step, so the trainer chases a target that moves with it."
+
+After: "Distillation to a fixed teacher converges. Here, the sampler is a copy of the trainer with
+an error. After each step, the sampler gets the new weights of the trainer. Thus the target moves
+with the trainer, and the error has an effect at each step."
+
+**Content**
+- Explain **why**, not what. "Clip the ratio" restates the code. "The minimum stops the gradient
+  when the ratio is outside $[1 - \epsilon, 1 + \epsilon]$. This prevents a large change to the
+  policy in one update" explains it.
+- Say what the trade-offs and uncertainties are: "This adds bias. It also makes the variance much
+  smaller." "The paper does not give this value. We use 0.95."
+- Use "we" only for decisions in the implementation ("We use 0.2"). Describe the method directly:
+  "The trainer computes...", not "We compute...".
 - Mark every deviation from the paper with `<aside class="note">`.
 - When a test showed that a claim in the paper is wrong or loose, say so in a note next to the code
   the claim is about: what the paper states, a short derivation of the correct statement, the input
@@ -114,9 +161,8 @@ Follow the depth the user chose:
   the error. If the paper's claim holds for typical inputs, say that too.
 - When a published result (a proof, a theorem) is known to be wrong, cite the work that showed it,
   explain where the argument fails, and back it with a test if the failure can be reproduced.
-- No filler ("In this section we will...", "This page implements...", "On this page the target
-  is..."), no marketing words, no emojis. Pages do not narrate themselves; say the thing directly
-  ("Here the target is a single class $t$", or just "For a hard target $t$...").
+- No filler ("In this section we will...", "This page implements..."), no marketing words, no
+  emojis. Pages do not narrate themselves. Say the thing directly.
 
 ## Diagrams
 

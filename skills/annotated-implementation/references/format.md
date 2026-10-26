@@ -53,7 +53,9 @@ outside them except HTML comments, and sections may not be nested.
 - `data-start` values must strictly increase, point at non-blank lines, and the first one must
   come before any non-blank line, so every line of the file is shown exactly once.
 - A section without `data-start` has prose and an empty code column. Use it for long
-  introductions or for prose-only pages (no `code:` in the front matter).
+  introductions, for prose-only pages (no `code:` in the front matter), and for a heading that
+  introduces several functions: put it above them, then give each function its own section. It can
+  appear anywhere between other sections.
 - Attribute values may use `"..."` or `'...'`; use single quotes when the code line contains `"`
   (or write `&quot;`). `>` and `->` inside a quoted value are fine.
 - Pick `data-expect` to be distinctive: the whole statement for short lines, the start of the
@@ -61,6 +63,12 @@ outside them except HTML comments, and sections may not be nested.
 
 The build fails, naming the file and line, if any of these rules are broken - most usefully when
 the code changed and a `data-expect` no longer matches its line.
+
+The build also warns (and a strict build such as a CI check treats warnings as failures) when:
+
+- a section's code contains more than one top-level function or class definition;
+- a section that starts at a definition has no heading and follows a heading on a different
+  definition, so the reader cannot tell which code the heading is for.
 
 ## Prose HTML
 
