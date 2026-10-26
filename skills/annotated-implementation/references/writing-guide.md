@@ -68,6 +68,11 @@ a few doc sections carrying the narrative and many short notes.
 
 - Define every symbol the first time it appears: "where $r$ is the reward, $\gamma \in [0, 1]$ is
   the discount factor".
+- "First" means first in page order, not next to the code that makes the value. A section without
+  code near the top of a page (results, an overview) must define every symbol and setting it uses,
+  also when a code section further down defines it again. Before you build, read the page from the
+  top. For each symbol and setting name ($\sigma$, $k$, $G$, `max_tokens`), find its first
+  occurrence and make sure the definition is there.
 - **Write each symbol identically everywhere on the page.** Clicking a symbol highlights every
   equal expression on the page, so `\hat{A}_t` here and `\hat A_t` there breaks
   the link. Decide notation once (match the paper unless it clashes with the code) and keep it.
@@ -219,6 +224,22 @@ Skip diagrams that only restate one equation or that decorate.
   `scripts/figures.py`). Mark the figure's place in the annotation with
   `<!-- figure:name -->...<!-- /figure:name -->` and have the script rewrite what is between
   the markers. A hand-drawn copy drifts from the code; a generated one cannot.
+- **Charts and tables must be readable without the prose.** Cover the text around a chart. From the
+  chart and its caption only, a reader must know what each axis is, what each line or bar is, and
+  which settings were used. Thus:
+  - Label both axes with the quantity, and its unit if it has one: "success rate of the trainer",
+    "$\lVert \theta - \theta_0 \rVert$", "training step". Tick values are not a label. Put the
+    y label on the axis (rotated), not only in a panel title.
+  - A panel title names the quantity or the setting of the panel. A group name only ("GRPO family")
+    is not sufficient.
+  - Put a legend for each colour and line style in the figure.
+  - Give each fixed setting that the chart depends on (noise size, number of seeds, $k$) in the
+    caption, and define its symbol there or before the figure.
+  - In a table, each column header names a quantity. Define each symbol in a header in the text
+    directly before the table.
+  - In a chart helper in `scripts/figures.py`, name each label parameter for the axis it labels
+    (`x_label`, `y_label`) and make both required, so that a chart cannot have an axis without a
+    label.
 - Hand-draw only conceptual figures (boxes and arrows). Lay them out on a grid in the `viewBox`
   so boxes align, and use one arrow marker defined in `<defs>`.
 - **One `<path>` per arrow.** `marker-end` draws a head only at the last point of a path, so

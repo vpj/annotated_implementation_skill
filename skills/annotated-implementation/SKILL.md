@@ -194,6 +194,11 @@ If the code must change after annotating, rerun the tests, rerun `--listing`, an
    At a desktop width (at least 900px) also look at each page: diagrams render with typeset
    labels that sit inside their boxes, sections line up
    with their code, and clicking a key symbol in an equation lights up its other occurrences.
+   Then read each page from the top as a new reader:
+   - Is each symbol and setting defined at its first occurrence in page order?
+   - Can you read each chart and table without the prose: both axes labelled, each line in a
+     legend, each setting in the caption?
+   The self-check does not test these two points, so do not skip them.
 3. Report: the pages produced (paths), test results, deviations from the paper, and anything
    left out of scope.
 
