@@ -122,8 +122,9 @@ python -m http.server --directory site
 
 [`skills/annotated-implementation/examples/adam`](skills/annotated-implementation/examples/adam) is a
 complete project made with this skill: Adam and AdaMax in PyTorch, with the bias-correction and
-infinity-norm derivations, a sketch of the convergence proof, and tests that found two step-size
-bounds in the paper that do not hold. Build it with:
+infinity-norm derivations, a sketch of the convergence proof, a small experiment with a generated
+chart showing where that proof fails, and tests that found two step-size bounds in the paper that do
+not hold. Build it with:
 
 ```bash
 python skills/annotated-implementation/scripts/build.py \

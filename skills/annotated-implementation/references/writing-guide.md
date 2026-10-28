@@ -26,6 +26,9 @@ it explains, in the annotation of the Python file that contains that code.
 - `<h4>` for named sub-steps inside a method.
 
 **Experiment** (the experiment's own file, e.g. `experiment.py`)
+- The file holds the training and evaluation code, so it is annotated like any other. It returns
+  its results; it does not save or plot them. `experiments/run_<name>.py`, outside the package, runs
+  it over the seeds and settings and saves the records (`references/figures.md`).
 - What is trained on what, and what result to expect (numbers, curves, time on what hardware).
 - Configuration values explained where they are set, especially ones that differ from the paper.
 
@@ -207,7 +210,8 @@ Skip diagrams that only restate one equation or that decorate.
 
 - Inline `<svg>` inside a `<figure>` with a `<figcaption>` that says what to notice, not just what
   it is. Give the figure an `id` (`fig-mask`) so other prose can link to it.
-- Keep it small: a `viewBox` around 400 wide for the prose column, `width="100%"`, font size 11 to 13 in viewBox units.
+- Keep it small: a `viewBox` around 400 wide for the prose column, `width="100%"`, font size 11 to 13 in viewBox units for diagrams. Charts use the sizes that
+  `scripts/charts.py` sets (10 for ticks and axis labels).
 - Use `currentColor` for lines and text and the theme's token colours (`var(--hl-k)` pink,
   `var(--hl-nf)` orange, `var(--hl-m)` purple, `var(--hl-nb)` cyan, `var(--hl-bp)` green) for
   accents, so it works in both colour schemes. Use the same colour for the same kind of thing
@@ -235,6 +239,7 @@ Skip diagrams that only restate one equation or that decorate.
   `scripts/figures.py`). Mark the figure's place in the annotation with
   `<!-- figure:name -->...<!-- /figure:name -->` and have the script rewrite what is between
   the markers. A hand-drawn copy drifts from the code; a generated one cannot.
+  `references/figures.md` gives the pipeline, the helpers, the layout and the line styles.
 - **Charts and tables must be readable without the prose.** Cover the text around a chart. From the
   chart and its caption only, a reader must know what each axis is, what each line or bar is, and
   which settings were used. Thus:

@@ -33,8 +33,29 @@ jobs:
               print('ok', path)
           EOF
 
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Scripts import on Python 3.8
+        run: |
+          uv run --no-project --python 3.8 python -c "
+          import sys
+          sys.path.insert(0, 'skills/annotated-implementation/scripts')
+          import build, charts, highlight
+          print('ok')
+          "
+
       - name: Example tests
         run: python -m pytest -q skills/annotated-implementation/examples/adam/tests
+
+      - name: Example chart helpers match the skill's
+        run: cmp skills/annotated-implementation/scripts/charts.py skills/annotated-implementation/examples/adam/scripts/charts.py
+
+      - name: Example results and figures are up to date
+        working-directory: skills/annotated-implementation/examples/adam
+        run: |
+          python experiments/run_convergence.py
+          python scripts/figures.py
+          git diff --exit-code -- experiments/results adam
 
       - name: Example annotations are valid
         run: |

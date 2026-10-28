@@ -512,8 +512,9 @@ pre, tt, code {
     text-align: center;
 }
 
-/* Not `.docs svg`: that would also match KaTeX's own SVGs (radicals, stretchy accents) */
-.docs figure svg, .docs figure img {
+/* Not KaTeX's own SVGs (radicals, stretchy accents), which also appear in captions and diagram labels:
+   `height: auto` collapses them */
+.docs figure svg:not(.katex svg), .docs figure img {
     max-width: 100%;
     height: auto;
 }
