@@ -32,9 +32,16 @@ breadcrumbs: Adam=index.html; Adam optimizer=adam.html
 <section data-start="9" data-expect="def __init__(self, params: Iterable, lr: float = 1e-3">
   <p>The defaults are the paper's: step size $\alpha = 0.001$, decay rates $\beta_1 = 0.9$ and
      $\beta_2 = 0.999$, and $\epsilon = 10^{-8}$.</p>
+</section>
+
+<section data-start="11" data-expect="if lr &lt;= 0.0:"></section>
+
+<section data-start="13" data-expect="if not all(0.0 &lt;= beta &lt; 1.0 for beta in betas):">
   <p>$\beta_1$ and $\beta_2$ must be in $[0, 1)$. At $\beta = 1$ the moving average would never move,
      and the bias correction below would divide by zero.</p>
 </section>
+
+<section data-start="15" data-expect="if eps &lt; 0.0:"></section>
 
 <section data-start="19" data-expect="@torch.no_grad()">
   <h3>Take a step</h3>
@@ -46,14 +53,20 @@ breadcrumbs: Adam=index.html; Adam optimizer=adam.html
   <h3>Update one parameter</h3>
 </section>
 
+<section data-start="34" data-expect="grad = param.grad"></section>
+
 <section data-start="38" data-expect="state = self.state[param]">
   <p>On the first update, initialize $t = 0$, $m_0 = 0$ and $v_0 = 0$. Starting the averages at
      zero is what makes them biased, as we will see.</p>
 </section>
 
-<section data-start="44" data-expect="beta1, beta2 = group['betas']">
+<section data-start="44" data-expect="beta1, beta2 = group['betas']"></section>
+
+<section data-start="45" data-expect="state['t'] += 1">
   <p>$t \leftarrow t + 1$</p>
 </section>
+
+<section data-start="46" data-expect="t, m, v = state['t'], state['m'], state['v']"></section>
 
 <section data-start="48" data-expect="m.mul_(beta1).add_(grad, alpha=1 - beta1)">
   <p>$m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t$, the biased estimate of the first moment (the mean)

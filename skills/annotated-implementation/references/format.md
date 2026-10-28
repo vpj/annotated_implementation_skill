@@ -62,6 +62,8 @@ outside them except HTML comments, and sections may not be nested.
   introductions, for theory with no code of its own (a theorem and its proof above the code that
   tests it), and for a heading that introduces several functions: put it above them, then give each
   function its own section. It can appear anywhere between other sections.
+- A section can be empty (`<section data-start="44" data-expect="..."></section>`): its code is
+  shown with nothing beside it. Use it for lines that the prose around them does not explain.
 - An empty Python file (an empty `__init__.py`) takes only sections without `data-start`.
 - Attribute values may use `"..."` or `'...'`; use single quotes when the code line contains `"`
   (or write `&quot;`). `>` and `->` inside a quoted value are fine.

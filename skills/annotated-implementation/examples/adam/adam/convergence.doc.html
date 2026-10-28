@@ -133,9 +133,13 @@ breadcrumbs: Adam=index.html; Convergence=convergence.html
   <p>The optimizer sees only the gradient of $f_t$.</p>
 </section>
 
+<section data-start="26" data-expect="optimizer.step()"></section>
+
 <section data-start="27" data-expect="with torch.no_grad():">
   <p>Project $x$ back onto $\mathcal{X} = [-1, 1]$ after every step.</p>
 </section>
+
+<section data-start="29" data-expect="return x.item()"></section>
 
 <section data-kind="doc">
   <h2>Result</h2>

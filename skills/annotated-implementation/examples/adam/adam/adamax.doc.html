@@ -54,6 +54,8 @@ breadcrumbs: Adam=index.html; AdaMax=adamax.html
      is larger than Adam's $0.001$.</p>
 </section>
 
+<section data-start="10" data-expect="if lr &lt;= 0.0:"></section>
+
 <section data-start="18" data-expect="@torch.no_grad()">
   <h3>Take a step</h3>
   <p>The same as <a href="adam.html">Adam</a>: optionally re-evaluate the loss, then update every parameter
@@ -64,13 +66,19 @@ breadcrumbs: Adam=index.html; AdaMax=adamax.html
   <h3>Update one parameter</h3>
 </section>
 
+<section data-start="33" data-expect="grad = param.grad"></section>
+
 <section data-start="37" data-expect="state = self.state[param]">
   <p>Initialize $t = 0$, $m_0 = 0$ and $u_0 = 0$.</p>
 </section>
 
-<section data-start="43" data-expect="beta1, beta2 = group['betas']">
+<section data-start="43" data-expect="beta1, beta2 = group['betas']"></section>
+
+<section data-start="44" data-expect="state['t'] += 1">
   <p>$t \leftarrow t + 1$</p>
 </section>
+
+<section data-start="45" data-expect="t, m, u = state['t'], state['m'], state['u']"></section>
 
 <section data-start="47" data-expect="m.mul_(beta1).add_(grad, alpha=1 - beta1)">
   <p>$m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t$, the same first moment estimate as Adam.</p>

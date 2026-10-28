@@ -219,6 +219,8 @@ If the code must change after annotating, rerun the tests, rerun `--listing`, an
 ## Rules
 
 - Code files stay plain. If something needs explaining, it goes in the annotation.
+- A section's prose explains every line beside it. Lines it does not explain go in an empty
+  section of their own, never under an unrelated note.
 - Write all prose in ASD-STE100 Simplified Technical English (short sentences, one topic per
   sentence, active voice, simple words, no idioms). See `references/writing-guide.md`.
 - Tests stay outside the package: they are never rendered and the annotations never link to them.

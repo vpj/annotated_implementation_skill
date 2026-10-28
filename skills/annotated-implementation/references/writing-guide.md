@@ -39,6 +39,12 @@ it explains, in the annotation of the Python file that contains that code.
 
 Choose split points so each section's prose explains exactly the code beside it.
 
+- **The prose applies to every line beside it.** A note that explains one line (`$t \leftarrow t + 1$`)
+  sits beside that line only. Lines around it that the note does not explain (unpacking settings,
+  a validation check, `return x`) get their own **empty section**, `<section data-start="44"
+  data-expect="beta1, beta2 = group['betas']"></section>`, not a place under an unrelated note. An
+  empty section may hold several neighbouring lines that need no explanation.
+
 - Start a section at every class and function definition. The build warns when a section covers
   more than one top-level definition.
 - A heading names only the code in its own section. When one heading introduces several functions
@@ -52,8 +58,8 @@ Choose split points so each section's prose explains exactly the code beside it.
   kind:
   - prose: `$\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$`
   - code: `delta = rewards[:, t] + gamma * last_value - values[:, t]`
-- Do not split off trivial lines (assignments of constructor arguments, `return x`); let them ride
-  with the section above. A section with no prose is better merged.
+- Do not write prose for trivial lines just to fill a section; leave the section empty. Merge two
+  neighbouring sections only when one piece of prose explains the code of both.
 - Put long derivations above the class or function they justify, not inside a method.
 
 ## Doc sections and notes
