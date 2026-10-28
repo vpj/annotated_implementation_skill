@@ -1,6 +1,6 @@
 [![X](https://img.shields.io/twitter/follow/vpj?style=social)](https://x.com/vpj)
 
-![Adam optimizer page: explanations and equations on the left, the code they describe on the right](docs/images/adam-dark.webp)
+![Adam optimizer: explanations and equations on the left, the code they describe on the right](docs/images/adam-dark.webp)
 
 # Annotated Research Paper Implementation
 
@@ -28,7 +28,8 @@ or of code you already have:
 > Turn `my_algorithm.py` into an annotated walkthrough with the math next to the code.
 
 Claude first asks how much to implement and how deep the explanations should go, writes and tests
-the code, checks in with you along the way, and then builds pages like this:
+the code, checks in with you along the way, and then annotates each Python file and builds it into
+HTML like the image above:
 [Adam example](skills/annotated-implementation/examples/adam)
 
 ## Install
@@ -58,13 +59,13 @@ cp -r annotated_implementation_skill/skills/annotated-implementation ~/.claude/s
 - **`pypdf`**, used to save and extract the text of a paper (`pip install -r requirements.txt`).
 - **Your implementation's own dependencies** (for example PyTorch); the skill installs nothing on
   your behalf without asking.
-- **A browser** to view the pages. Math is rendered by KaTeX, loaded from a CDN, so the pages need
-  network access the first time they are opened.
+- **A browser** to view the HTML. Math is rendered by KaTeX, loaded from a CDN, so it needs network
+  access the first time it is opened.
 
 ## Features
 
 - **Click to highlight.** Click a symbol in an equation, or a name in the code, and every occurrence
-  on the page lights up while the rest dims. Here $\beta_1$ is selected, in the light theme:
+  in the file lights up while the rest dims. Here $\beta_1$ is selected, in the light theme:
 
   ![Light theme with every occurrence of beta 1 highlighted after clicking it](docs/images/adam-light-highlight.webp)
 
@@ -78,39 +79,42 @@ cp -r annotated_implementation_skill/skills/annotated-implementation ~/.claude/s
 - **Derivations and proofs at the depth you choose.** From intuition and key equations up to full
   derivations and proofs, with proofs you can expand in place.
 - **You review as it goes.** Claude stops for your approval after the implementation, before
-  writing derivations and proofs, and after the first page.
+  writing derivations and proofs, and after the first annotated files.
 - **Light and dark themes**, following your system setting.
-- **Self-checking pages.** Each page reports math that failed to render, equations too wide for
-  their column, and broken links.
+- **Self-checking.** The build reports broken links and Python files without an annotation; each
+  HTML file reports math that failed to render and equations too wide for their column.
 
 ## Workflow
 
 When you ask for an annotated implementation, the skill works in five phases:
 
-1. **Read and scope.** Saves the paper to `paper/` and drafts a page plan.
+1. **Read and scope.** Saves the paper to `paper/` and plans the Python files.
 2. **Scoping interview.** Asks about implementation scope, dependencies on other papers, how deep
    the documentation should go (intuition, derivations, or proofs), whether to add an experiment,
    and the framework and audience.
 3. **Implement and test.** Writes plain code and tests, then stops for your review (checkpoint A).
-4. **Annotate.** Shows you its plan for derivations and proofs (checkpoint B), writes the first
-   page for your review (checkpoint C), then the rest.
-5. **Build and check.** Builds the pages, checks links and rendering, and reports.
+4. **Annotate.** Shows you its plan for derivations and proofs (checkpoint B), annotates the
+   overview and the core file for your review (checkpoint C), then the rest.
+5. **Build and check.** Builds the HTML, checks links and rendering, and reports.
 
 A project ends up laid out like this:
 
 ```
 <topic>/
-├── paper/         # paper.pdf, paper.txt (not for committing)
-├── <package>/     # plain Python
-├── tests/         # correctness tests; never rendered
-├── annotations/   # <page>.doc.html, one per page
-└── site/          # the built pages
+├── paper/              # paper.pdf, paper.txt (not for committing)
+├── <package>/          # plain Python, each file annotated by the .doc.html next to it
+│   ├── __init__.py
+│   ├── __init__.doc.html
+│   ├── <module>.py
+│   └── <module>.doc.html
+├── tests/              # correctness tests; never rendered
+└── site/               # the built HTML: index.html, <module>.html
 ```
 
-To build the pages yourself:
+To build the HTML yourself:
 
 ```bash
-python <skill>/scripts/build.py annotations/*.doc.html --out site
+python <skill>/scripts/build.py <package> --out site
 python -m http.server --directory site
 ```
 
@@ -123,21 +127,21 @@ bounds in the paper that do not hold. Build it with:
 
 ```bash
 python skills/annotated-implementation/scripts/build.py \
-    skills/annotated-implementation/examples/adam/annotations/*.doc.html --out site
+    skills/annotated-implementation/examples/adam/adam --out site
 ```
 
 ## How it works
 
 - `skills/annotated-implementation/SKILL.md`: the workflow Claude follows.
-- `references/format.md`: the annotation file format. Each page is a series of HTML `<section>`
-  elements, each naming the line of code it starts at (`data-start`) and what that line contains
-  (`data-expect`).
+- `references/format.md`: the annotation file format. Each `<module>.doc.html` is a series of HTML
+  `<section>` elements, each naming the line of `<module>.py` it starts at (`data-start`) and what
+  that line contains (`data-expect`).
 - `references/writing-guide.md`: how to write the prose and math.
 - `scripts/build.py`: validates annotations against the code, highlights it, checks links, and
-  writes the pages.
+  writes one HTML file per Python file.
 - `scripts/paper_text.py`: downloads a paper and extracts its text.
-- `assets/`: the page template, stylesheet, and the script that renders math and handles clicks.
-  Each page also checks itself after rendering and reports problems in `window.annotationReport`.
+- `assets/`: the HTML template, stylesheet, and the script that renders math and handles clicks.
+  Each HTML file also checks itself after rendering and reports problems in `window.annotationReport`.
 
 ## Development
 
@@ -145,7 +149,7 @@ python skills/annotated-implementation/scripts/build.py \
 pip install -r requirements-dev.txt
 python -m pytest skills/annotated-implementation/examples/adam/tests
 python skills/annotated-implementation/scripts/build.py \
-    skills/annotated-implementation/examples/adam/annotations/*.doc.html --check
+    skills/annotated-implementation/examples/adam/adam --check
 claude plugin validate .
 ```
 

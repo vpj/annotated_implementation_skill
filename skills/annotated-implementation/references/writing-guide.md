@@ -1,32 +1,39 @@
 # Writing guide
 
-The goal is a page a reader can study top to bottom and come away able to re-derive the method
+The goal is an annotated file a reader can study top to bottom and come away able to re-derive the method
 and re-write the code. Every section answers "what is this line doing, and why does the paper
 want it?"
 
-## Page types
+## Kinds of files
 
 The code is the subject; the writing exists to explain it. Every explanation sits next to the code
-it explains, on the page of the file that contains that code.
+it explains, in the annotation of the Python file that contains that code.
 
-**Index page** (prose only; the only page without code)
+**`__init__.py`** (the package overview)
+- One section at line 1, beside the imports that export the main classes.
 - `<h1>` with the method's name.
 - First paragraph: "This is a [PyTorch](https://pytorch.org) implementation of
   [<paper title>](<arXiv abs URL>)." Then a short description of what the paper does.
-- A link to every code page with one line on what it implements.
-- If the method builds on other papers implemented here, say so and link those pages.
-- Nothing else: derivations, figures and results belong on the code pages, beside their code.
+- A link to every other file with one line on what it implements.
+- If the method builds on other papers implemented here, say so and link their files.
+- Nothing else: derivations, figures and results belong in the other files, beside their code.
 
-**Code page** (one Python file: a model, loss, algorithm, or the helpers they use)
+**Module** (one Python file: a model, loss, algorithm, or the helpers they use)
 - `<h1>` + paper link + the introduction to this file's code, above the imports.
 - An `<h2>` section per class or top-level function, above its definition, containing the
   derivation or equations it implements.
 - `<h3>` for methods that need their own explanation (`forward`, `__call__`, a sampling step).
 - `<h4>` for named sub-steps inside a method.
 
-**Experiment page** (the experiment's own file, e.g. `experiment.py`)
+**Experiment** (the experiment's own file, e.g. `experiment.py`)
 - What is trained on what, and what result to expect (numbers, curves, time on what hardware).
 - Configuration values explained where they are set, especially ones that differ from the paper.
+
+**Theory** (a theorem, a proof, a convergence analysis)
+- It goes in the file whose code it is about, in sections without `data-start` above that code.
+- When the paper's claim can be shown by running something (a counterexample, a toy problem where
+  the bound is tight), write that code as a file of the package and put the theory in its
+  annotation.
 
 ## Section granularity
 
@@ -55,26 +62,26 @@ Each section is either a **doc** (`data-kind="doc"`, shown in brighter text) or 
 default, dimmer). The contrast lets a reader skim the main explanation and drop into the notes
 only where they want detail. Decide per section:
 
-- `doc`: the page introduction, the explanation of a class or function, a derivation or proof,
+- `doc`: the file's introduction, the explanation of a class or function, a derivation or proof,
   anything that explains *why* the method works, and notes that correct the paper.
 - `note`: a short remark on the line beside it, such as the equation a line computes, a default
   value, a shape, or a step counter.
 
 A section with a heading is usually a doc, but not always: a `###` that only names a method
-(“Update one parameter”) with no explanation under it can stay a note. Most pages end up with
+(“Update one parameter”) with no explanation under it can stay a note. Most files end up with
 a few doc sections carrying the narrative and many short notes.
 
 ## Math
 
 - Define every symbol the first time it appears: "where $r$ is the reward, $\gamma \in [0, 1]$ is
   the discount factor".
-- "First" means first in page order, not next to the code that makes the value. A section without
-  code near the top of a page (results, an overview) must define every symbol and setting it uses,
-  also when a code section further down defines it again. Before you build, read the page from the
-  top. For each symbol and setting name ($\sigma$, $k$, $G$, `max_tokens`), find its first
+- "First" means first from the top of the file, not next to the code that makes the value. A
+  section without code near the top (results, an overview) must define every symbol and setting it
+  uses, also when a code section further down defines it again. Before you build, read the file
+  from the top. For each symbol and setting name ($\sigma$, $k$, $G$, `max_tokens`), find its first
   occurrence and make sure the definition is there.
-- **Write each symbol identically everywhere on the page.** Clicking a symbol highlights every
-  equal expression on the page, so `\hat{A}_t` here and `\hat A_t` there breaks
+- **Write each symbol identically everywhere in the file.** Clicking a symbol highlights every
+  equal expression in the file, so `\hat{A}_t` here and `\hat A_t` there breaks
   the link. Decide notation once (match the paper unless it clashes with the code) and keep it.
 - Make the prose math match the code: if the code normalizes the advantage, say so and show
   $\bar{A}_t = \frac{\hat{A}_t - \mu(\hat{A})}{\sigma(\hat{A})}$ where the normalization happens.
@@ -86,11 +93,10 @@ a few doc sections carrying the narrative and many short notes.
   Between steps, add a sentence when the step is not obvious ("importance sampling $a$ from
   $\pi_{\theta_{old}}$").
 - Use `\operatorname{clip}`, `\min`, `\max`, `\mathbb{E}`, `\log`, never bare words in math.
-- Keep display equations narrow. The prose column is only 40% of the page, about 365-485px of text
+- Keep display equations narrow. The prose column is only 40% of the width, about 365-485px of text
   on a desktop screen, which fits roughly 35 characters of LaTeX source per line for ordinary
   expressions (fewer with fractions and sums). Notes (`aside.note`) are narrower still. Split anything longer over the lines of an `align*`: a long right-hand side on lines
-  starting with `&=`, or a sum of large terms on lines starting with `& +`. Prose-only pages are
-  wider (about 800px).
+  starting with `&=`, or a sum of large terms on lines starting with `& +`.
 - Name a new quantity with a new symbol. If a derivation needs a ratio that looks like one from the
   paper but is not the same (for example $\beta_1^2 / \beta_2$ versus the paper's
   $\gamma = \beta_1^2 / \sqrt{\beta_2}$), give it its own letter; reusing the paper's would link two
@@ -113,7 +119,7 @@ Follow the depth the user chose:
 ## Language: Simplified Technical English
 
 Write all prose in [ASD-STE100 Simplified Technical English](https://www.asd-ste100.org/).
-Readers of these pages are often not native English speakers, and they read slowly, next to math
+Readers of these files are often not native English speakers, and they read slowly, next to math
 and code. Simple, regular sentences let them spend their attention on the method.
 
 **Sentences**
@@ -131,7 +137,7 @@ and code. Simple, regular sentences let them spend their attention on the method
   "demonstrate"; "start", not "kick off"; "about", not "roughly speaking".
 - No phrasal verbs ("set up", "carry out", "end up"), no idioms and no metaphors ("with nothing to
   hide behind", "the trainer chases the sampler"). Say what happens.
-- Use one term for one thing on every page. If it is the "sampler", it is never also "the inference
+- Use one term for one thing in every file. If it is the "sampler", it is never also "the inference
   engine" or "the generator".
 - Keep the articles: "the gradient of the loss", not "gradient of loss".
 - At most three nouns in a row: "the tail mass of the sampler", not "sampler tail mass ratio".
@@ -166,13 +172,13 @@ with the trainer, and the error has an effect at each step."
   the error. If the paper's claim holds for typical inputs, say that too.
 - When a published result (a proof, a theorem) is known to be wrong, cite the work that showed it,
   explain where the argument fails, and back it with a test if the failure can be reproduced.
-- No filler ("In this section we will...", "This page implements..."), no marketing words, no
-  emojis. Pages do not narrate themselves. Say the thing directly.
+- No filler ("In this section we will...", "This file implements..."), no marketing words, no
+  emojis. The annotation does not narrate itself. Say the thing directly.
 
 ## Diagrams
 
-A reader re-deriving a method from the page needs pictures as much as equations. Plan the
-diagrams with the page plan, and expect most pages to have at least one.
+A reader re-deriving a method from the annotation needs pictures as much as equations. Plan the
+diagrams with the file plan, and expect most files to have at least one.
 
 **When to draw.** Whenever a reader would otherwise build the picture in their head:
 
@@ -195,12 +201,11 @@ Skip diagrams that only restate one equation or that decorate.
 
 - Inline `<svg>` inside a `<figure>` with a `<figcaption>` that says what to notice, not just what
   it is. Give the figure an `id` (`fig-mask`) so other prose can link to it.
-- Keep it small: a `viewBox` around 400 wide for the prose column (up to about 800 on prose-only
-  pages), `width="100%"`, font size 11 to 13 in viewBox units.
+- Keep it small: a `viewBox` around 400 wide for the prose column, `width="100%"`, font size 11 to 13 in viewBox units.
 - Use `currentColor` for lines and text and the theme's token colours (`var(--hl-k)` pink,
   `var(--hl-nf)` orange, `var(--hl-m)` purple, `var(--hl-nb)` cyan, `var(--hl-bp)` green) for
   accents, so it works in both colour schemes. Use the same colour for the same kind of thing
-  across a page's figures, and say what each colour means in the caption.
+  across a file's figures, and say what each colour means in the caption.
 - **SVG text is black unless told otherwise.** `<text>` takes its colour from `fill`, whose default
   is black, not from the CSS `color` that `currentColor` follows; math labels inherit that fill.
   Put `fill="currentColor"` on the `<svg>` element (and `fill="none"` on any outline-only shape),
@@ -208,14 +213,14 @@ Skip diagrams that only restate one equation or that decorate.
   stylesheet defaults unfilled figure text to `currentColor`, but a figure copied elsewhere or
   saved as a standalone `.svg` does not get that rule.
 - **Math in labels:** write a label containing math as LaTeX in `$...$`, exactly as the prose
-  writes it: `<text x="60" y="55" text-anchor="middle">$o_l$, $c$, $q_l$</text>`. The page
+  writes it: `<text x="60" y="55" text-anchor="middle">$o_l$, $c$, $q_l$</text>`. The browser
   replaces it with a typeset label at the same anchor point, and because the LaTeX is identical
   to the prose, clicking the symbol in the figure lights up the prose and equations too. Never fake
   math with Unicode subscripts (`oₗ`) or plain `o_l`; the self-check reports both.
 - Never put HTML in the SVG yourself (`<foreignObject>`). WebKit (Safari) positions HTML inside it
   without the SVG's offset and scaling, and KaTeX is built from positioned boxes, so math drawn
   that way lands far from its label in Safari while looking right in Chrome. A `$...$` label in a
-  plain `<text>` avoids this: the page moves it into an HTML overlay on top of the drawing. The
+  plain `<text>` avoids this: `annotate.js` moves it into an HTML overlay on top of the drawing. The
   `<svg>` needs a `viewBox`.
 - Labels with math are taller than plain text; leave at least one font size of space around them.
 - **Generate figures that show data or code behaviour.** When a figure shows what the code
@@ -247,12 +252,12 @@ Skip diagrams that only restate one equation or that decorate.
   `<path>` (or `<line>`) with its own `marker-end`.
 - Check every figure in the browser at desktop width, in both colour schemes and in both Chrome
   and WebKit: labels inside their boxes, every arrow with a head, nothing clipped, math typeset. On
-  macOS, `scripts/webkit_check.swift` renders a page in WebKit and saves each figure as a PNG.
+  macOS, `scripts/webkit_check.swift` renders an HTML file in WebKit and saves each figure as a PNG.
 
 ## The reader does not have the paper
 
-The pages must make sense on their own. "Eq. 2", "Fig. 14", "Algorithm 1, line 13" or "see
-Section 3.1" are meaningless to someone who has only the page in front of them, and they cannot
+The annotations must make sense on their own. "Eq. 2", "Fig. 14", "Algorithm 1, line 13" or "see
+Section 3.1" are meaningless to someone who has only the annotated code in front of them, and they cannot
 check what the label pointed to. So:
 
 - **Say what it is.** Instead of "this is Eq. 2", show the equation: "the noisy sample is
@@ -268,15 +273,16 @@ check what the label pointed to. So:
 - **Discrepancies inside the paper** ("the algorithm box samples $t \sim \operatorname{Beta}(7, 1)$
   but the text uses $1 - \eta$") are described by their content on both sides, with paper-ref
   labels for each.
-- **Pseudocode.** If the paper's algorithm box is central, reproduce its steps on the page (an
+- **Pseudocode.** If the paper's algorithm box is central, reproduce its steps in the annotation (an
   `<ol>` with an `id`) and refer to steps by linking that list, not "line 13".
 
-The build warns about every paper label outside a `paper-ref` span, so a page that still leans on
+The build warns about every paper label outside a `paper-ref` span, so an annotation that still leans on
 the paper's numbering does not pass.
 
 ## Links
 
 - Paper: arXiv abstract URL (`https://arxiv.org/abs/<id>`), not the PDF.
 - Within the site: link anchors on elements (`training.html#eq-flash`), never the paper's numbers.
-- Other pages: relative (`gae.html`, `loss.html#s4`).
-- Prior work the reader may need: link the paper, or its page here if implemented.
+- Other files: relative to this file's HTML, which mirrors the package (`gae.html`,
+  `loss.html#s4`, `../index.html`).
+- Prior work the reader may need: link the paper, or its file here if implemented.

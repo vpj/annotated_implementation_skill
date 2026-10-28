@@ -39,6 +39,6 @@ jobs:
       - name: Example annotations are valid
         run: |
           python skills/annotated-implementation/scripts/build.py \
-            skills/annotated-implementation/examples/adam/annotations/*.doc.html --check
+            skills/annotated-implementation/examples/adam/adam --check
           python skills/annotated-implementation/scripts/build.py \
-            skills/annotated-implementation/examples/adam/annotations/*.doc.html --out site
+            skills/annotated-implementation/examples/adam/adam --out site

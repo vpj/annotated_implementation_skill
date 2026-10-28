@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-Build annotated implementation pages.
+Build the annotated HTML of a Python package.
 
-Each page is a `<name>.doc.html` annotation file. Its front matter may name a
-plain Python file (`code: ../pkg/module.py`); the annotation's `<section>`
-elements say which line of that file each section starts at. The script slices
-the code at those lines, checks every slice against `data-expect`, and writes
-a side-by-side HTML page.
+Every Python file `pkg/x.py` is annotated by `pkg/x.doc.html`, next to it. The
+annotation's `<section>` elements say which line of the Python file each section
+starts at. The script slices the code at those lines, checks every slice against
+`data-expect`, and writes a side-by-side `x.html`. The output mirrors the package:
+`pkg/sub/x.py` becomes `<out>/sub/x.html`, and `__init__.py` becomes `index.html`.
 
 Usage:
-    build.py --listing pkg/module.py              # numbered listing to annotate
-    build.py annotations/*.doc.html --out site    # validate and render
-    build.py annotations/*.doc.html --check       # validate only
+    build.py --listing pkg/module.py    # numbered listing to annotate
+    build.py pkg --out site             # validate and render
+    build.py pkg --check                # validate only
 
 Standard library only.
 """
@@ -20,6 +20,7 @@ import argparse
 import ast
 import html
 import io
+import posixpath
 import re
 import shutil
 import sys
@@ -35,6 +36,7 @@ TEMPLATE_PATH = ASSETS_DIR / 'template.html'
 ASSET_FILES = ['style.css', 'annotate.js']
 ASSET_OUT_DIR = 'assets'
 DOC_SUFFIX = '.doc.html'
+FRONT_MATTER_KEYS = ('title', 'summary', 'breadcrumbs')
 
 SECTION_RE = re.compile(r'<section\b((?:[^>"\']|"[^"]*"|\'[^\']*\')*)>(.*?)</section\s*>', re.S | re.I)
 ATTR_RE = re.compile(r'([\w-]+)\s*=\s*(?:"([^"]*)"|\'([^\']*)\')')
@@ -218,7 +220,9 @@ def slice_code(sections, code_lines, doc_path: Path, code_path: Path):
         starts.append((start, s))
 
     if not starts:
-        raise BuildError(f'{doc_path}: names code {code_path} but no section has data-start')
+        if any(line.strip() for line in code_lines):
+            raise BuildError(f'{doc_path}: no section has data-start, so the code of {code_path} would not be shown')
+        return
     first = starts[0][0]
     uncovered = [i + 1 for i in range(first - 1) if code_lines[i].strip()]
     if uncovered:
@@ -250,7 +254,7 @@ def render_breadcrumbs(value: str) -> str:
     return '\n'.join(links)
 
 
-def render_page(meta, sections, template: str) -> str:
+def render_html(meta, sections, template: str, assets: str) -> str:
     rows = []
     if meta.get('breadcrumbs'):
         rows.append(f'<div class="section header"><div class="docs"><nav class="breadcrumbs">'
@@ -259,24 +263,24 @@ def render_page(meta, sections, template: str) -> str:
     for i, s in enumerate(sections):
         code = render_code(*s['code']) if s.get('code') else ''
         code_class = 'code' if code else 'code empty'
-        is_doc = not meta.get('code') or s['attrs'].get('data-kind') == 'doc'
-        docs_class = 'docs doc-strings' if is_doc else 'docs'
+        docs_class = 'docs doc-strings' if s['attrs'].get('data-kind') == 'doc' else 'docs'
         rows.append(f'<div class="section" id="s{i}">\n'
                     f'<div class="{docs_class}"><a class="anchor" href="#s{i}">#</a>\n{s["html"]}\n</div>\n'
                     f'<div class="{code_class}">{code}</div>\n'
                     f'</div>')
     values = {'title': html.escape(meta['title']),
               'summary': html.escape(meta.get('summary', '')),
-              'assets': ASSET_OUT_DIR,
-              'page_class': '' if meta.get('code') else ' prose-only',
+              'assets': assets,
               'sections': '\n'.join(rows)}
     return PLACEHOLDER_RE.sub(lambda m: values[m.group(1)], template)
 
 
-def build_page(doc_path: Path, template: str):
-    if not doc_path.name.endswith(DOC_SUFFIX):
-        raise BuildError(f'{doc_path}: annotation files must end with {DOC_SUFFIX}')
+def build_file(code_path: Path, doc_path: Path, name: str, template: str):
     meta, body, base_line = parse_front_matter(doc_path.read_text(encoding='utf-8'), doc_path)
+    for key in meta:
+        if key not in FRONT_MATTER_KEYS:
+            raise BuildError(f'{doc_path}: unknown front matter key {key!r} (allowed: {", ".join(FRONT_MATTER_KEYS)}); '
+                             f'the annotation always describes {code_path.name}, the Python file next to it')
     if not meta.get('title'):
         raise BuildError(f'{doc_path}: front matter needs a title')
     sections = parse_sections(body, doc_path, base_line)
@@ -287,38 +291,58 @@ def build_page(doc_path: Path, template: str):
                              f'got {kind!r}')
 
     warnings = paper_reference_warnings(sections, doc_path)
-    if meta.get('code'):
-        code_path = (doc_path.parent / meta['code']).resolve()
-        if not code_path.is_file():
-            raise BuildError(f'{doc_path}: code file {meta["code"]} not found (resolved to {code_path})')
-        code = code_path.read_text(encoding='utf-8')
-        try:
-            ast.parse(code)
-        except SyntaxError as e:
-            raise BuildError(f'{code_path}:{e.lineno}: syntax error: {e.msg}')
-        warnings += code_warnings(code, code_path)
-        slice_code(sections, code.split('\n'), doc_path, code_path)
-        warnings += definition_warnings(sections, code, doc_path)
-        highlighted = highlight_python(code)
-        for s in sections:
-            if s.get('code'):
-                start, chunk = s['code']
-                s['code'] = (start, highlighted[start - 1:start - 1 + len(chunk)])
-    else:
-        for s in sections:
-            if 'data-start' in s['attrs']:
-                raise BuildError(f'{doc_path}:{s["line"]}: data-start used but front matter has no code:')
+    code = code_path.read_text(encoding='utf-8')
+    try:
+        ast.parse(code)
+    except SyntaxError as e:
+        raise BuildError(f'{code_path}:{e.lineno}: syntax error: {e.msg}')
+    warnings += code_warnings(code, code_path)
+    slice_code(sections, code.split('\n'), doc_path, code_path)
+    warnings += definition_warnings(sections, code, doc_path)
+    highlighted = highlight_python(code)
+    for s in sections:
+        if s.get('code'):
+            start, chunk = s['code']
+            s['code'] = (start, highlighted[start - 1:start - 1 + len(chunk)])
 
     ids, links = collect_links(meta, sections, doc_path)
-    return {'name': doc_path.name[:-len(DOC_SUFFIX)],
-            'html': render_page(meta, sections, template),
+    assets = '../' * name.count('/') + ASSET_OUT_DIR
+    return {'name': name,
+            'html': render_html(meta, sections, template, assets),
             'warnings': warnings,
             'ids': ids,
             'links': links}
 
 
+def find_files(package: Path):
+    """
+    Pair every Python file in the package with the annotation next to it, and name its HTML file by its
+    path in the package. A Python file without an annotation is only a warning, so the first files can be
+    built while the rest are still being written; an annotation without a Python file is an error.
+    """
+    if not package.is_dir():
+        raise BuildError(f'{package}: not a directory; pass the package that holds the Python files')
+    pairs, warnings = [], []
+    for code_path in sorted(package.rglob('*.py')):
+        rel = code_path.relative_to(package)
+        if any(part.startswith(('.', '__pycache__')) for part in rel.parts[:-1]):
+            continue
+        doc_path = code_path.with_name(code_path.stem + DOC_SUFFIX)
+        if not doc_path.is_file():
+            warnings.append(f'{code_path}: no annotation {doc_path.name} next to it; not built')
+            continue
+        stem = 'index' if code_path.stem == '__init__' else code_path.stem
+        pairs.append((code_path, doc_path, rel.with_name(stem).as_posix()))
+    for doc_path in sorted(package.rglob('*' + DOC_SUFFIX)):
+        code_path = doc_path.with_name(doc_path.name[:-len(DOC_SUFFIX)] + '.py')
+        if not code_path.is_file():
+            raise BuildError(f'{doc_path}: no Python file {code_path.name} next to it; '
+                             f'every annotation describes the Python file with the same name')
+    return pairs, warnings
+
+
 def collect_links(meta, sections, doc_path: Path):
-    """Element ids a link can target on this page, and every href in its prose and breadcrumbs."""
+    """Element ids a link can target in this file, and every href in its prose and breadcrumbs."""
     ids = {f's{i}' for i in range(len(sections))}
     links = []
     for s in sections:
@@ -335,25 +359,27 @@ def attr_value(m) -> str:
     return html.unescape(m.group(1) if m.group(1) is not None else m.group(2))
 
 
-def check_links(pages, out_dir):
+def check_links(built, out_dir):
     """
-    Relative links must reach a page in this build (and an id on it) or a file in the output directory.
-    A link to a page that is not in this build is only a warning, so a subset of pages can be built
-    while the rest are still being written; a missing anchor on a page that is built is an error.
+    Relative links must reach an HTML file in this build (and an id in it) or a file in the output
+    directory. A link to a Python file that is not annotated yet is only a warning; a missing anchor in
+    a file that is built is an error.
     """
     errors, warnings = [], []
-    ids_by_page = {f'{p["name"]}.html': p['ids'] for p in pages}
-    for page in pages:
-        for where, href in page['links']:
+    ids_by_file = {f'{f["name"]}.html': f['ids'] for f in built}
+    for f in built:
+        for where, href in f['links']:
             if not href or ABSOLUTE_URL_RE.match(href):
                 continue
             target, _, anchor = href.partition('#')
-            target = target.split('?')[0] or f'{page["name"]}.html'
-            if target in ids_by_page:
-                if anchor and anchor not in ids_by_page[target]:
+            target = target.split('?')[0]
+            target = posixpath.normpath(posixpath.join(posixpath.dirname(f['name']), target)) if target \
+                else f'{f["name"]}.html'
+            if target in ids_by_file:
+                if anchor and anchor not in ids_by_file[target]:
                     errors.append(f'{where}: link {href!r}: {target} has no element with id {anchor!r}')
             elif out_dir is None or not (out_dir / target).exists():
-                warnings.append(f'{where}: link {href!r} does not point to a page in this build'
+                warnings.append(f'{where}: link {href!r} does not point to an HTML file in this build'
                                 + (f' or a file in {out_dir}' if out_dir is not None else ''))
     return errors, warnings
 
@@ -369,38 +395,44 @@ def listing(code_path: Path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('files', nargs='+', type=Path, help='annotation files, or a Python file with --listing')
-    parser.add_argument('--out', type=Path, help='output directory for the HTML pages')
+    parser.add_argument('paths', nargs='+', type=Path, help='the package directory, or Python files with --listing')
+    parser.add_argument('--out', type=Path, help='output directory for the HTML files')
     parser.add_argument('--check', action='store_true', help='validate without writing anything')
     parser.add_argument('--listing', action='store_true', help='print Python files with line numbers')
     args = parser.parse_args()
 
     if args.listing:
-        for path in args.files:
-            if len(args.files) > 1:
+        for path in args.paths:
+            if len(args.paths) > 1:
                 print(f'==> {path} <==')
             listing(path)
         return 0
 
+    if len(args.paths) != 1:
+        parser.error('pass one package directory; its HTML mirrors its layout')
     if not args.check and args.out is None:
         parser.error('--out is required unless --check or --listing is given')
 
     template = TEMPLATE_PATH.read_text(encoding='utf-8')
-    pages, errors = [], []
-    for doc_path in args.files:
+    built, errors, warnings = [], [], []
+    try:
+        pairs, warnings = find_files(args.paths[0])
+    except BuildError as e:
+        pairs, errors = [], [str(e)]
+    for code_path, doc_path, name in pairs:
         try:
-            page = build_page(doc_path, template)
-            pages.append(page)
-            for w in page['warnings']:
-                print(f'warning: {w}', file=sys.stderr)
+            f = build_file(code_path, doc_path, name, template)
+            built.append(f)
+            warnings.extend(f['warnings'])
         except BuildError as e:
             errors.append(str(e))
     if not errors:
-        link_errors, link_warnings = check_links(pages, args.out)
+        link_errors, link_warnings = check_links(built, args.out)
         errors.extend(link_errors)
-        for w in link_warnings:
-            print(f'warning: {w}', file=sys.stderr)
+        warnings.extend(link_warnings)
 
+    for w in warnings:
+        print(f'warning: {w}', file=sys.stderr)
     for e in errors:
         print(f'error: {e}', file=sys.stderr)
     if errors:
@@ -411,12 +443,13 @@ def main():
         (args.out / ASSET_OUT_DIR).mkdir(exist_ok=True)
         for asset in ASSET_FILES:
             shutil.copy(ASSETS_DIR / asset, args.out / ASSET_OUT_DIR / asset)
-        for page in pages:
-            path = args.out / f'{page["name"]}.html'
-            path.write_text(page['html'], encoding='utf-8')
+        for f in built:
+            path = args.out / f'{f["name"]}.html'
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(f['html'], encoding='utf-8')
             print(f'wrote {path}')
     else:
-        print(f'ok: {len(pages)} page(s) valid')
+        print(f'ok: {len(built)} file(s) valid')
     return 0
 
 

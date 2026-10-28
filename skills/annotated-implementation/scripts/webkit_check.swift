@@ -1,11 +1,11 @@
-// Load an annotated page in WebKit (the engine behind Safari), print its self-check report, and save
+// Load an annotated HTML file in WebKit (the engine behind Safari), print its self-check report, and save
 // a PNG of every <figure> so diagrams can be inspected. Chrome-based previews do not show WebKit-only
-// layout bugs, so run this on macOS for every page with a diagram.
+// layout bugs, so run this on macOS for every annotated file with a diagram.
 //
 // Usage:
 //   swift webkit_check.swift <url> <out-dir> [light|dark] [width]
 //
-// Prints the page's `window.annotationReport` as JSON and the path of each figure snapshot.
+// Prints its `window.annotationReport` as JSON and the path of each figure snapshot.
 // Exits 1 if the report is not ok.
 
 import AppKit

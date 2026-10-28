@@ -4,16 +4,16 @@ summary: The regret bound from the Adam paper, a sketch of its proof, and the co
 breadcrumbs: Adam=index.html; Convergence=convergence.html
 ---
 
-<section>
+<section data-kind="doc" data-start="1" data-expect="from typing import Callable, List">
   <h1>Convergence of Adam</h1>
   <p>The convergence analysis in <a href="https://arxiv.org/abs/1412.6980">Adam: A Method for Stochastic Optimization</a>
-     <span class="paper-ref">(Section 4)</span> proves that Adam's average regret goes to zero on convex problems. This page explains the setting,
+     <span class="paper-ref">(Section 4)</span> proves that Adam's average regret goes to zero on convex problems. This file explains the setting,
      states the result, and sketches the proof. It also explains why the proof is wrong:
      <a href="https://arxiv.org/abs/1904.09237">Reddi et al. (2018)</a> found a simple convex problem on which
-     Adam converges to the worst possible point.</p>
+     Adam converges to the worst possible point. The code implements that problem.</p>
 </section>
 
-<section>
+<section data-kind="doc">
   <h2>Online convex optimization</h2>
   <p>The analysis uses the online learning framework of Zinkevich (2003). At every step $t$ the optimizer
      commits to parameters $\theta_t$, and only then is it shown a convex cost function $f_t$ and pays
@@ -28,7 +28,7 @@ breadcrumbs: Adam=index.html; Convergence=convergence.html
      general convex problems is $O(\sqrt{T})$.</p>
 </section>
 
-<section>
+<section data-kind="doc">
   <h2>The theorem</h2>
   <p>Write $g_t = \nabla f_t(\theta_t)$, $g_{t,i}$ for its $i$-th coordinate, and
      $g_{1:T,i} = [g_{1,i}, g_{2,i}, \dots, g_{T,i}]$ for the history of coordinate $i$. Let
@@ -59,7 +59,7 @@ breadcrumbs: Adam=index.html; Convergence=convergence.html
      $\beta_1$. The theorem needs $\alpha_t = \alpha / \sqrt{t}$ and a $\beta_{1,t}$ that decays to zero.</aside>
 </section>
 
-<section>
+<section data-kind="doc">
   <h2>Proof sketch</h2>
   <p>The paper gives the full proof in its appendix <span class="paper-ref">(Appendix 10.1)</span>. Its structure is as follows.</p>
   <details>
@@ -93,13 +93,17 @@ breadcrumbs: Adam=index.html; Convergence=convergence.html
   </details>
 </section>
 
-<section>
+<section data-kind="doc">
   <h2>Where the proof fails</h2>
   <p>Step 3 only works if every coefficient
      $\frac{\sqrt{\hat{v}_{t,i}}}{\alpha_t} - \frac{\sqrt{\hat{v}_{t-1,i}}}{\alpha_{t-1}}$ is non-negative.
      Only then can each $(\theta_{t,i} - \theta^*_i)^2$ be replaced by its upper bound $D_\infty^2$. That
      requires $\sqrt{\hat{v}_t} / \alpha_t$ to never decrease. For SGD and AdaGrad it doesn't. For Adam it can:
      $\hat{v}_t$ is an exponential moving average, so it drops whenever recent gradients are smaller than old ones.</p>
+</section>
+
+<section data-kind="doc" data-start="6" data-expect="class OnlineProblem:">
+  <h2>The counterexample</h2>
   <p><a href="https://arxiv.org/abs/1904.09237">Reddi et al. (2018)</a> turn this into a counterexample. On
      $\mathcal{X} = [-1, 1]$, with $C \gt 2$, let</p>
   $$f_t(x) = \begin{cases} C x & t \bmod 3 = 1 \\ -x & \text{otherwise} \end{cases}$$
@@ -108,8 +112,34 @@ breadcrumbs: Adam=index.html; Convergence=convergence.html
      information arrives once every three steps. Dividing by $\sqrt{\hat{v}_t}$ shrinks it to a step about the same size as
      each $-1$ step, and $\hat{v}_t$ decays before the next one arrives. Two steps towards $+1$ outweigh one step
      towards $-1$, and the regret grows linearly in $T$.</p>
-  <p>We ran this problem with the <a href="adam.html">implementation here</a>, using $\alpha_t = 0.5 / \sqrt{t}$
-     and projecting onto $[-1, 1]$ after every step. For $C = 3$ and $C = 10$, Adam ends at exactly $x = +1$.</p>
+</section>
+
+<section data-start="10" data-expect="def gradient(self, t: int) -&gt; torch.Tensor:">
+  <p>The gradient of $f_t$ at any $x$: $C$ when $t \bmod 3 = 1$, and $-1$ otherwise.</p>
+</section>
+
+<section data-kind="doc" data-start="15" data-expect="def run(">
+  <h3>Run an optimizer</h3>
+  <p>Start at $x = 0$ and take <code>n_steps</code> steps. <code>make_optimizer</code> builds the optimizer for
+     the parameter $x$, for example the <a href="adam.html">Adam implementation here</a> with $\beta_1 = 0$ and
+     $\beta_2 = 1 / (1 + C^2)$. The return value is the final $x$.</p>
+</section>
+
+<section data-start="24" data-expect="optimizer.param_groups[0]['lr'] = alpha / t ** 0.5">
+  <p>The step size decays as $\alpha_t = \alpha / \sqrt{t}$, as in the <a href="#thm-regret">theorem</a>.</p>
+</section>
+
+<section data-start="25" data-expect="x.grad = self.gradient(t)">
+  <p>The optimizer sees only the gradient of $f_t$.</p>
+</section>
+
+<section data-start="27" data-expect="with torch.no_grad():">
+  <p>Project $x$ back onto $\mathcal{X} = [-1, 1]$ after every step.</p>
+</section>
+
+<section data-kind="doc">
+  <h2>Result</h2>
+  <p>With $\alpha = 0.5$, for $C = 3$ and $C = 10$, Adam ends at exactly $x = +1$, the worst point.</p>
   <aside class="note">Reddi et al. fix the proof with <strong>AMSGrad</strong>, which divides by the running
      maximum $\max(\hat{v}_{t-1}, v_t)$ instead of $\hat{v}_t$. That makes $\sqrt{\hat{v}_t} / \alpha_t$
      non-decreasing by construction. On the same problem, PyTorch's <code>torch.optim.Adam(amsgrad=True)</code>

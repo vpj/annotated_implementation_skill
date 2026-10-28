@@ -4,7 +4,7 @@
     "name": "Varuna Jayasiri"
   },
   "metadata": {
-    "description": "Annotated, tested implementations of research papers as side-by-side HTML pages."
+    "description": "Annotated, tested implementations of research papers as side-by-side HTML."
   },
   "plugins": [
     {

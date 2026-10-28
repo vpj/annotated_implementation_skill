@@ -1,4 +1,4 @@
-// Renders math and makes identifiers and equation symbols clickable on an annotated implementation page.
+// Renders math and makes identifiers and equation symbols clickable in an annotated implementation.
 //
 // Equation linking: every math expression on the page is tokenized. When a shorter expression
 // appears again (on its own, or inside a longer equation), every occurrence is wrapped in

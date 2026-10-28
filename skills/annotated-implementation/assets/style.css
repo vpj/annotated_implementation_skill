@@ -1,5 +1,5 @@
 /*
- * Layout and colours for annotated implementation pages.
+ * Layout and colours for annotated implementation HTML.
  * Prose on the left (40%), code on the right (60%); a dark theme by default and a light theme
  * for light-mode systems. Code tokens use Pygments class names (.k keyword, .n name, ...).
  */
@@ -469,21 +469,6 @@ a.parent:after {
     font-size: 14px;
     margin-left: 4px;
     color: var(--nav-tick);
-}
-
-/* Pages without code (overviews, proofs): one centred reading column */
-
-.page.prose-only {
-    max-width: 860px;
-    margin: 0 auto;
-}
-
-.page.prose-only .section {
-    grid-template-columns: minmax(0, 1fr);
-}
-
-.page.prose-only .code {
-    display: none;
 }
 
 /* Prose */

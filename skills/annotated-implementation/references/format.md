@@ -1,12 +1,16 @@
 # Annotation file format
 
-An annotation file is `<page>.doc.html`. It becomes `<page>.html` in the output directory.
+Every Python file `<module>.py` in the package is annotated by `<module>.doc.html`, in the same
+directory. The build writes `<module>.html` at the same relative path in the output directory, and
+`__init__.py` becomes `index.html`: `ppo/loss.py` becomes `site/loss.html`, `ppo/gae/__init__.py`
+becomes `site/gae/index.html`.
+
+`ppo/loss.doc.html`:
 
 ```html
 ---
 title: Proximal Policy Optimization
 summary: A tested PyTorch implementation of PPO with the derivation of its clipped objective.
-code: ../ppo/loss.py
 breadcrumbs: Overview=index.html; PPO loss=loss.html
 ---
 
@@ -32,10 +36,12 @@ breadcrumbs: Overview=index.html; PPO loss=loss.html
 
 | Key | Required | Meaning |
 |---|---|---|
-| `title` | yes | Page `<title>`. Also write a visible `<h1>` in the first section. |
-| `summary` | no | One-sentence page description (meta description). |
-| `code` | no | Python file this page annotates, relative to the annotation file. Omit for prose-only pages such as an overview. |
-| `breadcrumbs` | no | `Label=url; Label=url` links shown above the page. |
+| `title` | yes | HTML `<title>`. Also write a visible `<h1>` in the first section. |
+| `summary` | no | One-sentence description of the file (meta description). |
+| `breadcrumbs` | no | `Label=url; Label=url` links shown above the code, relative to this file's HTML. |
+
+Other keys are an error. There is no key for the Python file: it is always the one next to the
+annotation, with the same name.
 
 ## Sections
 
@@ -44,7 +50,7 @@ outside them except HTML comments, and sections may not be nested.
 
 | Attribute | Meaning |
 |---|---|
-| `data-start` | 1-based line of the code file where this section's code begins. |
+| `data-start` | 1-based line of the Python file where this section's code begins. |
 | `data-expect` | Text that must appear on that line (whitespace-insensitive). Required with `data-start`. |
 | `data-kind` | `doc` (bright) or `note` (default, dimmer). Optional; see the writing guide. |
 
@@ -53,9 +59,10 @@ outside them except HTML comments, and sections may not be nested.
 - `data-start` values must strictly increase, point at non-blank lines, and the first one must
   come before any non-blank line, so every line of the file is shown exactly once.
 - A section without `data-start` has prose and an empty code column. Use it for long
-  introductions, for prose-only pages (no `code:` in the front matter), and for a heading that
-  introduces several functions: put it above them, then give each function its own section. It can
-  appear anywhere between other sections.
+  introductions, for theory with no code of its own (a theorem and its proof above the code that
+  tests it), and for a heading that introduces several functions: put it above them, then give each
+  function its own section. It can appear anywhere between other sections.
+- An empty Python file (an empty `__init__.py`) takes only sections without `data-start`.
 - Attribute values may use `"..."` or `'...'`; use single quotes when the code line contains `"`
   (or write `&quot;`). `>` and `->` inside a quoted value are fine.
 - Pick `data-expect` to be distinctive: the whole statement for short lines, the start of the
@@ -84,7 +91,7 @@ Extra styled elements:
 | `<details><summary>` | Long proofs or side derivations the reader can expand. |
 | `class="no-math"` | On any element whose `$` signs are literal (prices, shell variables). |
 | `<span class="paper-ref">` | The paper's own label for something the prose has just restated: `<span class="paper-ref">(Eq. 3 in the paper)</span>`. Shown small and dim. The only place a paper label ("Eq. 3", "Fig. 14", "Algorithm 1", "Section 3.1", "Theorem 2"...) may appear; anywhere else the build warns. |
-| `id="..."` on any element | A link target. Wrap an equation, figure or list that other prose refers to: `<div id="eq-loss">$$...$$</div>`, then link it with `<a href="training.html#eq-loss">the loss</a>`. The targeted element gets an accent bar when the page is opened at it. Use page-unique, descriptive ids (`eq-path`, `fig-mask`), not paper numbers. |
+| `id="..."` on any element | A link target. Wrap an equation, figure or list that other prose refers to: `<div id="eq-loss">$$...$$</div>`, then link it with `<a href="training.html#eq-loss">the loss</a>`. The targeted element gets an accent bar when the HTML is opened at it. Use ids that are unique in the file and descriptive (`eq-path`, `fig-mask`), not paper numbers. |
 
 ## Math
 
@@ -98,9 +105,9 @@ Inside math write `\lt` and `\gt` instead of `<` and `>`. The alignment `&` in `
 written literally as long as a space, `=` or `\` follows it (`&= ...`, `& \le ...`); the browser
 only reinterprets `&` followed by letters. Use `\operatorname{clip}`, `\min`, `\max`, `\mathbb{E}` rather than bare words.
 
-Equal expressions are linked automatically: if `$\hat{A}_t$` appears in two places, or inside a
+Equal expressions in a file are linked automatically: if `$\hat{A}_t$` appears in two places, or inside a
 larger equation, every occurrence is linked. Equations look plain; clicking a linked symbol dims
-the page and makes every occurrence glow, and clicking it again (or pressing Escape) turns the lights
+everything else and makes every occurrence glow, and clicking it again (or pressing Escape) turns the lights
 back on. Expressions containing `&`, `\\`, `\left`/`\right` or environments are not linked as a
 whole, but the expressions inside them are. Bare numbers and the index letters `i j k l n t T d p`
 are never linked on their own, so clicking a $t$ does nothing; `$\theta$`, `$x$` and `$\gamma$`
@@ -111,19 +118,18 @@ are linked.
 The build highlights the code itself (standard library `tokenize`), using Pygments' class names:
 `.k` keywords, `.n` names, `.nf`/`.nc` function and class names, `.o` operators, `.m*` numbers,
 `.s*` strings, and so on. Clicking any identifier in the code (`.n`, `.nn`, `.nc`, `.nf`) makes every
-occurrence of that name on the page glow, the same way as equation symbols. Long lines wrap; the
+occurrence of that name in the file glow, the same way as equation symbols. Long lines wrap; the
 line numbers are part of each line, so they stay aligned.
 
 ## Look
 
 Dark by default, light on light-mode systems. Prose takes 40% of the width and code 60%; each
 section has a top border and lights up on hover. Sections marked `data-kind="doc"` are shown in
-brighter text than the default `note` sections; all sections of prose-only pages are bright. See
-the writing guide for which to use.
+brighter text than the default `note` sections. See the writing guide for which to use.
 
-## Page self-check
+## Self-check
 
-After rendering, every page sets `window.annotationReport`:
+After rendering, every HTML file sets `window.annotationReport`:
 
 ```js
 { mathErrors: [{tex, message}], overflowing: [{section, tex}], unrenderedDollar: [{section, text}],
@@ -134,8 +140,8 @@ After rendering, every page sets `window.annotationReport`:
 and shows a red banner when anything is wrong. `overflowing` lists display equations wider than
 their column; split them over the lines of an `align*`. `svgPlainMath` lists diagram labels that look like math (LaTeX `_`, `^` or `\` outside
 `$...$`, or Unicode sub/superscripts) but are not typeset; wrap them in `$...$`. `svgLowContrast` lists
-diagram text and math labels with less than 3:1 contrast against the page in the current colour
-scheme, usually a hard-coded dark fill seen in dark mode; it only sees the scheme the page is
+diagram text and math labels with less than 3:1 contrast against the background in the current
+colour scheme, usually a hard-coded dark fill seen in dark mode; it only sees the scheme it is
 rendered in, so check both. `svgMisplaced` lists diagram labels whose typeset math is drawn away
 from the label, or labels that stick out of their drawing. `unrenderedDollar` lists sections whose
 visible text still contains `$`, usually an unbalanced delimiter (wrap literal dollar signs in
@@ -143,21 +149,23 @@ visible text still contains `$`, usually an unbalanced delimiter (wrap literal d
 
 ## Links
 
-The build checks every relative `href` in the prose and breadcrumbs. A link must point to a page in
-the same build (`adam.html`), optionally with a section anchor or element id that exists on it
-(`adam.html#s4`), to a file that exists in the output directory, or to an anchor on the same page
-(`#s2`). Absolute URLs are not checked. A missing anchor on a built page is an error; a link to a
-page that is not in the build is a warning, so you can build the first pages while the others are
-still unwritten. The final build of all pages must have no warnings.
+The build checks every relative `href` in the prose and breadcrumbs. Links are relative to the
+file's own HTML, which mirrors the package: from `loss.html`, the file `gae/advantage.py` is
+`gae/advantage.html`; from there, the overview is `../index.html`. A link must point to an HTML
+file of the same build (`adam.html`), optionally with a section anchor or element id that exists in
+it (`adam.html#s4`), to a file that exists in the output directory, or to an anchor in the same file
+(`#s2`). Absolute URLs are not checked. A missing anchor in a built file is an error. A link to a
+Python file that is not annotated yet is a warning, and so is the Python file itself, so you can
+build the first files while the others are still unwritten. The final build must have no warnings.
 
 ## Build commands
 
 ```bash
 python <skill>/scripts/build.py --listing pkg/module.py
-python <skill>/scripts/build.py annotations/*.doc.html --check
-python <skill>/scripts/build.py annotations/*.doc.html --out site
+python <skill>/scripts/build.py pkg --check
+python <skill>/scripts/build.py pkg --out site
 ```
 
-All pages go flat into `--out`; link between them with relative URLs (`loss.html#s3`). Section
-`i` (0-based, in file order) gets the anchor `#s<i>`. The build copies `style.css` and
+The build takes the package directory and annotates every `.py` file under it, in subpackages too.
+Section `i` (0-based, in file order) gets the anchor `#s<i>`. The build copies `style.css` and
 `annotate.js` into `<out>/assets/`.

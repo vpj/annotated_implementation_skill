@@ -4,7 +4,7 @@ __pycache__/
 .venv/
 venv/
 
-# Built pages and downloaded papers are generated; never commit them.
+# Built HTML and downloaded papers are generated; never commit them.
 site/
 paper/
 *.pdf

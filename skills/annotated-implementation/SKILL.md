@@ -1,22 +1,26 @@
 ---
 name: annotated-implementation
-description: Implement a research paper (or take existing Python code) and publish it as an annotated, side-by-side HTML walkthrough - explanations, derivations and proofs with KaTeX math on the left, the tested code on the right. Use when the user asks to implement a paper with explanations, write an annotated/literate implementation, explain a codebase or algorithm line by line next to its math, or produce a paper-implementation tutorial page.
+description: Implement a research paper (or take existing Python code) and publish it as an annotated, side-by-side HTML walkthrough - explanations, derivations and proofs with KaTeX math on the left, the tested code on the right. Use when the user asks to implement a paper with explanations, write an annotated/literate implementation, explain a codebase or algorithm line by line next to its math, or produce a paper-implementation tutorial.
 ---
 
 # Annotated Implementation
 
-Produce a tested, plain Python implementation of a paper and a set of HTML pages that explain it
-section by section: prose and math on the left, the exact code it describes on the right.
+Produce a tested, plain Python implementation of a paper and annotate each of its Python files:
+the build turns every file into an HTML file that explains it section by section, with prose and
+math on the left and the exact code it describes on the right.
 
 The code and the explanation are kept in separate files and joined at build time:
 
-- `<module>.py` - plain, runnable Python. **No comments and no docstrings.** All explanation goes
-  in the annotation.
-- `tests/` - tests that prove the implementation is correct. Never rendered, never linked.
-- `annotations/<page>.doc.html` - one per page. HTML `<section>` fragments; each one says which
-  line of the code file it starts at (`data-start`) and what that line contains (`data-expect`).
-- `scripts/build.py` (in this skill) - validates the annotations against the code and writes the
-  pages. It also prints numbered listings to annotate against.
+- `<package>/<module>.py` - plain, runnable Python. **No comments and no docstrings.** All
+  explanation goes in the annotation.
+- `<package>/<module>.doc.html` - the annotation of `<module>.py`, next to it. Every Python file in
+  the package has one. HTML `<section>` fragments; each one says which line of the Python file it
+  starts at (`data-start`) and what that line contains (`data-expect`).
+- `tests/` - tests that prove the implementation is correct. Outside the package, never rendered,
+  never linked.
+- `scripts/build.py` (in this skill) - validates the annotations against the code and writes one
+  HTML file per Python file, in the package's layout (`__init__.py` becomes `index.html`). It also
+  prints numbered listings to annotate against.
 - `scripts/paper_text.py` (in this skill) - saves the paper's PDF and extracted text into the
   project.
 
@@ -31,15 +35,15 @@ writing, not all of it:
 
 | Writing | Look at |
 |---|---|
-| plain code | `adam/adam.py`, `adam/adamax.py` |
+| plain code | `adam/adam.py`, `adam/adamax.py`, `adam/convergence.py` |
 | tests, including tests of the paper's claims | `tests/test_adam.py`, `tests/test_adamax.py`; a published counterexample in `tests/test_convergence_counterexample.py`; `tests/conftest.py`, `tests/helpers.py` |
-| the index page | `annotations/index.doc.html` |
-| a code page: section granularity, doc vs note sections, derivations above the code they justify, notes correcting the paper | `annotations/adam.doc.html` |
-| a derivation by limits, and a correction backed by a test | `annotations/adamax.doc.html` |
-| a prose-only theorem and proof page | `annotations/convergence.doc.html` |
+| the package overview in `__init__.py` | `adam/__init__.doc.html` |
+| a module: section granularity, doc vs note sections, derivations above the code they justify, notes correcting the paper | `adam/adam.doc.html` |
+| a derivation by limits, and a correction backed by a test | `adam/adamax.doc.html` |
+| a theorem and proof sketch above the code of a counterexample | `adam/convergence.doc.html` |
 
-Build it with `python <skill>/scripts/build.py <skill>/examples/adam/annotations/*.doc.html --out
-<somewhere>` to see the rendered result.
+Build it with `python <skill>/scripts/build.py <skill>/examples/adam/adam --out <somewhere>` to see
+the rendered result.
 
 ## Workflow
 
@@ -56,18 +60,21 @@ then end your turn and wait for the user's answer. Silence is not approval.
    to quote the paper's equations and proofs again. If `pypdf` is missing, install it.
 2. List the paper's components (models, losses, algorithms, training procedure) and the **prior
    papers it depends on** (e.g. PPO depends on GAE for advantages).
-3. Draft a **page plan**. A page is one annotated code file, as on nn.labml.ai: plan the files
-   first, the way the code would be organised anyway (the paper's loss, model or optimizer, a file
-   per dependency that will be implemented, helpers they need, and the experiment in its own file,
-   e.g. `experiment.py`). Each page carries the explanation of its own code, next to that code: the
-   introduction to a loss goes at the top of the loss's file, its derivations above the functions
-   they justify. The index is the only page without code: a short description of the paper and a
-   link to each code page with one line on what it implements. One line per page saying which code
-   file it annotates and what it covers, plus the diagrams it will carry (architecture, token
+3. Draft a **file plan**: the Python files of the package, the way the code would be organised
+   anyway (the paper's loss, model or optimizer, a file per dependency that will be implemented,
+   helpers they need, and the experiment in its own file, e.g. `experiment.py`). Each file's
+   annotation carries the explanation of its own code, next to that code: the introduction to a
+   loss goes at the top of the loss's file, its derivations above the functions they justify. The
+   package's `__init__.py` holds the overview: a short description of the paper and a link to each
+   file with one line on what it implements, beside the imports that export the main classes.
+   Material with no code of its own, such as a convergence proof, goes above the code it is about;
+   if the paper's claim can be shown by running something (a counterexample, a toy problem), that
+   code is a file of the package and the proof is its annotation. Give one line per file saying
+   what it implements and covers, plus the diagrams its annotation will carry (architecture, token
    layout, mask, loop, density...; see the writing guide's "Diagrams").
 
-If the user handed you existing code instead of a paper, the plan maps their files to pages, and
-Phase 3 becomes "strip comments/docstrings into notes, add tests, run them".
+If the user handed you existing code instead of a paper, the plan lists their files, and Phase 3
+becomes "strip comments/docstrings into notes, add tests, run them".
 
 ### Phase 2 - Scoping interview
 
@@ -78,8 +85,8 @@ you present for approval. Cover:
 
 1. **Implementation scope** - core method only, or the full method with the paper's variants and
    ablations.
-2. **Dependencies** - for each prior paper the method needs: implement it as its own annotated page,
-   or use an existing library implementation and link to it.
+2. **Dependencies** - for each prior paper the method needs: implement it as its own annotated file
+   (or subpackage), or use an existing library implementation and link to it.
 3. **Documentation depth**
    - intuition and the key equations;
    - full derivations of the main results;
@@ -92,23 +99,28 @@ you present for approval. Cover:
 5. **Framework and audience** - framework (default PyTorch) and what the reader is assumed to
    know, which decides what gets explained and what is taken as given.
 
-Then show the page plan, updated with the answers, and the project layout you will use (default
+Then show the file plan, updated with the answers, and the project layout you will use (default
 below; adapt to an existing project). **Wait for approval.**
 
 ```
 <topic>/
 ├── paper/                # paper.pdf, paper.txt (from paper_text.py)
-├── <package>/            # plain Python, one module per code page
+├── <package>/            # plain Python; one <module>.doc.html beside each <module>.py
+│   ├── __init__.py
+│   ├── __init__.doc.html # the overview
+│   ├── <module>.py
+│   └── <module>.doc.html
 ├── tests/                # pytest; correctness only, never rendered
 │   └── conftest.py       # puts the project root and tests/ on sys.path
-├── annotations/          # <page>.doc.html
-└── site/                 # generated by build.py
+└── site/                 # generated by build.py: index.html, <module>.html, assets/
 ```
 
 ### Phase 3 - Implement and test
 
 1. Write the modules: clear names, type hints, no comments, no docstrings. Follow the paper's
    notation in variable names where it stays readable (`log_pi`, `advantage`, `clip_eps`).
+   - Every file in the package is annotated and rendered, so keep scripts, figure generators and
+     test helpers outside it.
    - Give each function and class its own section later, so keep related functions together in a
      class when they share a purpose (a config and the constructors that fill it become
      classmethods; a value and the methods that derive from it become a class).
@@ -127,9 +139,9 @@ below; adapt to an existing project). **Wait for approval.**
    - a tiny overfit or loss-decreases check for anything trainable;
    - for an experiment, a smoke test that runs a few steps end to end.
 3. Test the **paper's claims**, not only the code: every bound, limit, invariance, or "this is
-   always at most X" the pages will repeat. Try to break each one, e.g. with an adversarial input
+   always at most X" the annotations will repeat. Try to break each one, e.g. with an adversarial input
    built from the equality case of the inequality the paper relies on. Papers are sometimes wrong,
-   and a claim the page states must be one you have checked. If a claim fails, keep the test (it
+   and a claim the annotation states must be one you have checked. If a claim fails, keep the test (it
    asserts what actually happens) and report it at checkpoint A.
 4. Put shared test helpers in `tests/helpers.py` and add `tests/conftest.py` that inserts the
    project root and `tests/` into `sys.path`, so `pytest tests` works from the project root.
@@ -159,10 +171,11 @@ Stop and wait for approval or changes.
    - which code section it will sit above.
 
    Stop and wait for approval.
-3. Write the overview page and the core page first, build them, and show the user where they are.
-   **Checkpoint C** - ask whether the tone, depth, section granularity and diagrams are right
-   before writing the remaining pages. Stop and wait.
-4. Write the remaining pages following `references/writing-guide.md`.
+3. Annotate `__init__.py` and the core file first, build them, and show the user where the HTML is.
+   Files without an annotation yet are skipped with a warning. **Checkpoint C** - ask whether the
+   tone, depth, section granularity and diagrams are right before annotating the remaining files.
+   Stop and wait.
+4. Annotate the remaining files following `references/writing-guide.md`.
 5. Compute every number the prose states (ratios, bounds, constants at the default
    hyperparameters) with a quick Python calculation instead of estimating it. Checkpoints only
    catch a wrong number if the user happens to recompute it.
@@ -172,34 +185,35 @@ If the code must change after annotating, rerun the tests, rerun `--listing`, an
 
 ### Phase 5 - Build and check
 
-1. Build: `python <skill>/scripts/build.py annotations/*.doc.html --out site`
-   Build all pages together and fix every error and every warning: broken relative links (the
-   build checks them against the other pages), and comments or docstrings left in the code.
-2. Serve the site (`python -m http.server --directory site`) and open every page in a browser if
-   one is available (or ask the user to), with the window at least 900px wide: the overflow check
-   measures the layout at the current width. Each page publishes a self-check once it has rendered:
+1. Build: `python <skill>/scripts/build.py <package> --out site`
+   Fix every error and every warning: Python files without an annotation, broken relative links
+   (the build checks them against the other HTML files), and comments or docstrings left in the
+   code.
+2. Serve the site (`python -m http.server --directory site`) and open every HTML file in a browser
+   if one is available (or ask the user to), with the window at least 900px wide: the overflow
+   check measures the layout at the current width. Each one publishes a self-check once it has rendered:
    evaluate `window.annotationReport` with a JavaScript tool, or look for the red banner. It lists
    math errors, display equations wider than their column, text that still contains `$`
    (math that was not rendered), diagram labels with math written as plain text instead of
-   `$...$`, and diagram text too dark or too light to read against the page. Fix all of them; split
+   `$...$`, and diagram text too dark or too light to read against the background. Fix all of them; split
    wide equations over lines of an `align*`. Run the check in **both colour schemes** (emulate
    `prefers-color-scheme: dark` and `light`, e.g. a `colorScheme` option of the browser tool): a
    diagram can pass in one and be unreadable in the other. The report also lists diagram labels out
    of place (typeset math away from its label, or a label outside its drawing).
    Browser tools are usually Chromium; Safari's WebKit lays out some things differently. On macOS,
-   also run every page that has a figure through WebKit, in both schemes, and look at the PNGs:
-   `swift <skill>/scripts/webkit_check.swift <page url> <out dir> dark` (then `light`). It prints
+   also run every HTML file that has a figure through WebKit, in both schemes, and look at the PNGs:
+   `swift <skill>/scripts/webkit_check.swift <url> <out dir> dark` (then `light`). It prints
    the same report and exits non-zero if it is not ok. On other systems, ask the user to open the
-   pages in Safari if they use it.
-   At a desktop width (at least 900px) also look at each page: diagrams render with typeset
+   files in Safari if they use it.
+   At a desktop width (at least 900px) also look at each one: diagrams render with typeset
    labels that sit inside their boxes, sections line up
    with their code, and clicking a key symbol in an equation lights up its other occurrences.
-   Then read each page from the top as a new reader:
-   - Is each symbol and setting defined at its first occurrence in page order?
+   Then read each one from the top as a new reader:
+   - Is each symbol and setting defined at its first occurrence, in order from the top?
    - Can you read each chart and table without the prose: both axes labelled, each line in a
      legend, each setting in the caption?
    The self-check does not test these two points, so do not skip them.
-3. Report: the pages produced (paths), test results, deviations from the paper, and anything
+3. Report: the HTML files produced (paths), test results, deviations from the paper, and anything
    left out of scope.
 
 ## Rules
@@ -207,9 +221,9 @@ If the code must change after annotating, rerun the tests, rerun `--listing`, an
 - Code files stay plain. If something needs explaining, it goes in the annotation.
 - Write all prose in ASD-STE100 Simplified Technical English (short sentences, one topic per
   sentence, active voice, simple words, no idioms). See `references/writing-guide.md`.
-- Tests never appear in the pages and pages never link to them.
+- Tests stay outside the package: they are never rendered and the annotations never link to them.
 - Never skip a checkpoint because the change seems small or the user seems busy.
-- Write every symbol with identical LaTeX everywhere on a page (`\hat{A}_t`, never sometimes
+- Write every symbol with identical LaTeX everywhere in a file (`\hat{A}_t`, never sometimes
   `\hat A_t`); clicking a symbol highlights every equal expression, and that only works on exact
   matches.
 - The reader does not have the paper. Never refer to "Eq. 3", "Fig. 14", "Algorithm 1" or
@@ -217,5 +231,5 @@ If the code must change after annotating, rerun the tests, rerun `--listing`, an
   site shows it (give that equation or figure an `id`). The paper's own label may appear only in
   `<span class="paper-ref">` beside the restated content; the build warns about any other.
   Checkpoint messages to the user may still use the paper's numbering.
-- Pages are self-contained HTML plus the `assets/` folder the build copies next to them. Code is
+- The output is self-contained HTML plus the `assets/` folder the build copies next to it. Code is
   highlighted at build time; only KaTeX loads from a public CDN.
