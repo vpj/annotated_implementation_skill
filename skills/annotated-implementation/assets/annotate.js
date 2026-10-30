@@ -263,8 +263,14 @@
                 label.style.transform = `rotate(${angle}deg) translate(${shift}, calc(-50% - 0.35em))`;
                 label.style.fontWeight = style.fontWeight;
                 label.style.opacity = style.opacity;
-                if (style.fill && style.fill.startsWith('rgb')) label.style.color = style.fill;
+                // Copy the fill as written (a theme variable), not its computed rgb value: a computed
+                // colour is fixed to the colour scheme at load and is unreadable after the scheme changes.
+                const filled = text.closest('[fill]');
+                const fill = filled && svg.contains(filled) ? filled.getAttribute('fill') : null;
+                if (fill && fill !== 'currentColor' && fill !== 'none') label.style.color = fill;
                 label.textContent = text.textContent;
+                const grouped = text.closest('[data-group]');
+                if (grouped && svg.contains(grouped)) label.dataset.group = grouped.dataset.group;
                 overlay.appendChild(label);
                 text.remove();
             }
@@ -397,6 +403,72 @@
         });
     }
 
+    // Interactive diagrams: an element of a figure with data-group="a b" belongs to the groups a and
+    // b. Clicking it lights up every element of the same figure that shares a group with it, and
+    // dims the other grouped elements. Clicking it again, clicking the figure outside the groups, or
+    // pressing Escape shows the whole figure again. Typeset labels keep their groups (svgMathLabels).
+    function setupFigureGroups(root) {
+        const groupsOf = (el) => new Set((el.dataset.group || '').split(/\s+/).filter(Boolean));
+        let active = null;
+        const clear = () => {
+            if (!active) return;
+            active.figure.classList.remove('figure-focus');
+            active.figure.querySelectorAll('.picked').forEach((e) => e.classList.remove('picked'));
+            active = null;
+        };
+        const pick = (figure, el) => {
+            const same = active && active.el === el;
+            clear();
+            if (same) return;
+            const groups = groupsOf(el);
+            for (const other of figure.querySelectorAll('[data-group]')) {
+                if ([...groupsOf(other)].some((g) => groups.has(g))) other.classList.add('picked');
+            }
+            figure.classList.add('figure-focus');
+            active = {figure, el};
+        };
+        // Outline-only shapes take clicks only on their thin stroke. CSS makes the inside of each
+        // grouped shape clickable; each grouped line gets a wide transparent copy under it.
+        const addHitAreas = (figure) => {
+            for (const line of figure.querySelectorAll('svg [data-group] :is(path, line, polyline), svg :is(path, line, polyline)[data-group]')) {
+                if (line.closest('marker, defs')) continue;
+                const hit = line.cloneNode(false);
+                hit.removeAttribute('marker-end');
+                hit.removeAttribute('marker-start');
+                hit.removeAttribute('stroke-dasharray');
+                hit.setAttribute('stroke', 'transparent');
+                hit.setAttribute('stroke-width', '10');
+                hit.setAttribute('fill', 'none');
+                hit.classList.add('hit-area');
+                line.before(hit);
+            }
+        };
+        for (const figure of root.querySelectorAll('figure')) {
+            if (!figure.querySelector('[data-group]')) continue;
+            figure.classList.add('interactive');
+            addHitAreas(figure);
+            for (const el of figure.querySelectorAll('[data-group]')) {
+                el.setAttribute('tabindex', '0');
+                el.setAttribute('role', 'button');
+            }
+            figure.addEventListener('click', (event) => {
+                const el = event.target.closest('[data-group]');
+                if (el && figure.contains(el)) pick(figure, el);
+                else if (active && active.figure === figure) clear();
+            });
+            figure.addEventListener('keydown', (event) => {
+                const el = event.target.closest('[data-group]');
+                if (el && (event.key === 'Enter' || event.key === ' ')) {
+                    event.preventDefault();
+                    pick(figure, el);
+                }
+            });
+        }
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') clear();
+        });
+    }
+
     function sectionId(el) {
         const section = el.closest('.section');
         return section ? section.id || 'header' : null;
@@ -417,6 +489,7 @@
 
     // Publishes `window.annotationReport` and shows a banner if anything needs fixing.
     function selfCheck(root) {
+        document.querySelectorAll('.math-errors').forEach((banner) => banner.remove());
         const annotation = (el) => {
             const a = el.querySelector('annotation');
             return a ? a.textContent : el.textContent;
@@ -477,6 +550,7 @@
             return;
         }
         svgMathLabels(root);
+        setupFigureGroups(root);
         renderMath(root);
         scrollToHash();
         if (document.fonts && document.fonts.ready) {
@@ -487,6 +561,8 @@
         } else {
             selfCheck(root);
         }
+        // Contrast depends on the colour scheme, so check again when it changes.
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => selfCheck(root));
     }
 
     if (document.readyState === 'loading') {

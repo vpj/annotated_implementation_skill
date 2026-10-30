@@ -799,6 +799,39 @@ body.lights-off .katex .clicked {
     text-shadow: 0 0 20px var(--lights-on);
 }
 
+/* Interactive diagrams: clicking an element with data-group lights up its groups (see
+   setupFigureGroups in annotate.js) */
+
+figure.interactive [data-group] {
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+figure.interactive svg [data-group] :is(rect, circle, ellipse, polygon),
+figure.interactive svg :is(rect, circle, ellipse, polygon)[data-group] {
+    pointer-events: all;
+}
+
+figure.interactive svg .hit-area {
+    pointer-events: stroke;
+}
+
+figure.interactive [data-group]:focus {
+    outline: none;
+}
+
+figure.figure-focus [data-group]:not(.picked) {
+    opacity: 0.15 !important;
+}
+
+figure.figure-focus svg .picked {
+    filter: drop-shadow(0 0 3px var(--lights-on));
+}
+
+figure.figure-focus .svg-label.picked {
+    text-shadow: 0 0 12px var(--lights-on);
+}
+
 /* Self-check banner */
 
 .math-errors {

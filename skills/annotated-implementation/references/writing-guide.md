@@ -227,6 +227,12 @@ The answers often need these details:
   prediction, a target, a sample, a loss term). Without it, the reader cannot see why the
   intermediate steps exist.
 - **What each row or box is,** with its symbol and a plain name.
+- **Operations as nodes, values on arrows.** Draw each operation (a layer, a sum, a selection) as
+  a box or a node, and label each arrow with the value that it carries. An operation name written
+  on an arrow does not show what goes in or what comes out. Each value leaves the node that
+  computes it; when one value feeds several nodes, draw one branch point, not separate sources. Name
+  each path in the figure or the caption ("residual", "cache") and say what it carries and what
+  the receiving node does with it.
 - **How the parts line up:** which element feeds which, what is kept or discarded, what is
   repeated, and any offset between positions (for example, an output that belongs to the next
   position).
@@ -281,8 +287,31 @@ The answers often need these details:
   - In a chart helper in `scripts/figures.py`, name each label parameter for the axis it labels
     (`x_label`, `y_label`) and make both required, so that a chart cannot have an axis without a
     label.
+- **Make a diagram interactive when a reader must trace something through it.** Many questions
+  from the procedure above have the form "which of these belong together?": the path of one input
+  through the steps, everything that one output depends on, all the places where one quantity
+  appears. Answer them with `data-group` (see `format.md`): clicking an element lights up the other
+  elements of its groups.
+  - Decide this for each figure yourself; do not ask the user. The test: list the "which of these
+    belong together?" questions that the figure raises. If the static figure does not answer one
+    of them at a glance, add groups for it. If every element is labelled and there is nothing to
+    trace, leave the figure static: an interaction with no question behind it is only noise.
+  - Name groups after what the reader traces: one group for each input position, each path, or
+    each quantity. Give an element every group that it is part of. An arrow belongs to the groups of
+    both of its ends.
+  - Clicking an element lights up all its groups. Thus an element that every path goes through
+    lights up the whole figure. Give it only the groups for which it is useful to click it.
+  - Say in the caption what to click and what lights up ("Click an input to light up every output
+    that uses it"). A reader does not know that a figure is interactive otherwise.
+  - Click each element in the browser and check that the lit set answers the question it is for.
+    The figure must still make sense without clicks, for print and for a quick read.
 - Hand-draw only conceptual figures (boxes and arrows). Lay them out on a grid in the `viewBox`
   so boxes align, and use one arrow marker defined in `<defs>`.
+- **A line never passes through a box that it does not enter, and never under a label.** A
+  reader reads a line through a box as an input to that box. Place the boxes first, then route
+  each arrow in the free space between them, with right-angle bends. Put each arrow label beside
+  its own segment, clear of other lines. Look at the rendered figure to check this: coordinates
+  that look correct in the source often overlap on the screen.
 - **One `<path>` per arrow.** `marker-end` draws a head only at the last point of a path, so
   `d="M0 0 H10 M20 0 H30"` gets one arrowhead, on the second segment. Each arrow is its own
   `<path>` (or `<line>`) with its own `marker-end`.

@@ -238,6 +238,9 @@ Stop and wait for approval or changes.
 
    Stop and wait for approval.
 3. Annotate `__init__.py` and the core file first, build them, and show the user where the HTML is.
+   Before you show a diagram, look at it in the browser and run the procedure in the writing guide's
+   "A diagram must answer the questions it raises": list the questions a new reader would ask about
+   each element, and answer each one in the figure. Click each group of an interactive figure.
    Files without an annotation yet are skipped with a warning. **Checkpoint C** - ask whether the
    tone, depth, section granularity and diagrams are right before annotating the remaining files.
    Stop and wait.
@@ -278,7 +281,10 @@ If the code must change after annotating, rerun the tests, rerun `--listing`, an
    - Is each symbol and setting defined at its first occurrence, in order from the top?
    - Can you read each chart and table without the prose: both axes labelled, each line in a
      legend, each setting in the caption?
-   The self-check does not test these two points, so do not skip them.
+   - Does each diagram answer the questions it raises (the procedure in the writing guide's
+     "Diagrams"): every value on an arrow, every value leaving the node that computes it, every
+     path named, no line through a box it does not enter?
+   The self-check does not test these points, so do not skip them.
 3. Report: the HTML files produced (paths), test results, deviations from the paper, and anything
    left out of scope.
 
@@ -291,6 +297,10 @@ If the code must change after annotating, rerun the tests, rerun `--listing`, an
   sentence, active voice, simple words, no idioms). See `references/writing-guide.md`.
 - Tests stay outside the package: they are never rendered and the annotations never link to them.
 - Never skip a checkpoint because the change seems small or the user seems busy.
+- Make the presentation decisions yourself when the guides give a test for them (which diagrams to
+  draw, whether a figure is interactive, how to split sections). Apply the test, decide, and say
+  what you decided at the next checkpoint. Ask the user only what the interview covers, or what
+  the guides leave open.
 - Write every symbol with identical LaTeX everywhere in a file (`\hat{A}_t`, never sometimes
   `\hat A_t`); clicking a symbol highlights every equal expression, and that only works on exact
   matches.
