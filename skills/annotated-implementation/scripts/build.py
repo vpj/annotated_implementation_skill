@@ -148,6 +148,21 @@ def definition_warnings(sections, code: str, doc_path: Path):
             first = min([node.lineno] + [d.lineno for d in node.decorator_list])
             starts.append((first, node.name))
     warnings = []
+    # A decorator is part of its definition: a section that starts between the first decorator and the
+    # `def`/`class` line leaves the decorator alone beside the previous section's prose.
+    decorated = [
+        (min(d.lineno for d in node.decorator_list), node.lineno, node.name)
+        for node in ast.walk(ast.parse(code))
+        if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) and node.decorator_list
+    ]
+    for s in sections:
+        if s.get('code'):
+            start = s['code'][0]
+            for first, line, name in decorated:
+                if first < start <= line:
+                    warnings.append(f'{doc_path}:{s["line"]}: section starts at line {start}, inside the definition '
+                                    f'of {name}, whose decorator is at line {first}; start one section at line '
+                                    f'{first} for the decorator and the definition together')
     heading_on_code = None
     for s in sections:
         has_heading = SUBHEADING_RE.search(s['html']) is not None

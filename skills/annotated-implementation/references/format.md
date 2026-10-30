@@ -76,6 +76,8 @@ the code changed and a `data-expect` no longer matches its line.
 The build also warns (and a strict build such as a CI check treats warnings as failures) when:
 
 - a section's code contains more than one top-level function or class definition;
+- a section starts between a definition's first decorator and its `def`/`class` line (start it at
+  the decorator instead);
 - a section that starts at a definition has no heading and follows a heading on a different
   definition, so the reader cannot tell which code the heading is for.
 

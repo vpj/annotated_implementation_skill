@@ -50,6 +50,10 @@ Choose split points so each section's prose explains exactly the code beside it.
 
 - Start a section at every class and function definition. The build warns when a section covers
   more than one top-level definition.
+- A definition starts at its first decorator (`@staticmethod`, `@dataclass`, `@torch.no_grad()`), not
+  at the `def` or `class` line. Start its section at the decorator, so that the prose sits beside
+  the decorator and the signature together. A section that starts at the `def` line of a decorated
+  definition leaves the decorator alone beside the prose; the build warns about it.
 - A heading names only the code in its own section. When one heading introduces several functions
   (four weight functions, two helpers for one derivation), put the heading and the shared
   explanation in a section **without** `data-start`, above the functions, and give each function
