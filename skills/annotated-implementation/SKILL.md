@@ -252,6 +252,11 @@ Stop and wait for approval or changes.
 If the code must change after annotating, rerun the tests, rerun `--listing`, and let the build's
 `data-expect` errors tell you which sections moved.
 
+Whenever you add, delete or move a section boundary, also when you fix a build warning, print the
+sections of that file: `python <skill>/scripts/build.py --sections <package>/<module>.py`. It shows
+each section's prose with the code lines it now covers. Check that the prose explains every line
+beside it; a line that it does not explain gets an empty section of its own.
+
 ### Phase 5 - Build and check
 
 1. Build: `python <skill>/scripts/build.py <package> --out site`

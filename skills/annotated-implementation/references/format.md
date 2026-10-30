@@ -168,6 +168,7 @@ build the first files while the others are still unwritten. The final build must
 
 ```bash
 python <skill>/scripts/build.py --listing pkg/module.py
+python <skill>/scripts/build.py --sections pkg/module.py   # each section's prose with the code it covers
 python <skill>/scripts/build.py pkg --check
 python <skill>/scripts/build.py pkg --out site
 ```

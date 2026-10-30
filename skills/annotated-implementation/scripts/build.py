@@ -162,7 +162,8 @@ def definition_warnings(sections, code: str, doc_path: Path):
                 if first < start <= line:
                     warnings.append(f'{doc_path}:{s["line"]}: section starts at line {start}, inside the definition '
                                     f'of {name}, whose decorator is at line {first}; start one section at line '
-                                    f'{first} for the decorator and the definition together')
+                                    f'{first} for the decorator and the definition together, then check with --sections that its '
+                                    f'prose explains each line it now covers')
     heading_on_code = None
     for s in sections:
         has_heading = SUBHEADING_RE.search(s['html']) is not None
@@ -408,13 +409,44 @@ def listing(code_path: Path):
         print(f'{i:>{width}} | {line}')
 
 
+def section_view(code_path: Path):
+    """Each section's prose (shortened) above the code lines it covers, to check that the prose explains them."""
+    doc_path = code_path.with_name(code_path.stem + '.doc.html')
+    meta, body, base_line = parse_front_matter(doc_path.read_text(encoding='utf-8'), doc_path)
+    sections = parse_sections(body, doc_path, base_line)
+    slice_code(sections, code_path.read_text(encoding='utf-8').split('\n'), doc_path, code_path)
+    for s in sections:
+        text = html.unescape(TAG_RE.sub(' ', COMMENT_RE.sub(' ', s['html'])))
+        text = ' '.join(text.split())
+        prose = text[:90] + ('...' if len(text) > 90 else '') if text else '(empty)'
+        if not s.get('code'):
+            print(f'-- no code: {prose}')
+            continue
+        start, chunk = s['code']
+        print(f'-- lines {start}-{start + len(chunk) - 1}: {prose}')
+        for i, line in enumerate(chunk):
+            print(f'   {start + i:>4} | {line}')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('paths', nargs='+', type=Path, help='the package directory, or Python files with --listing')
     parser.add_argument('--out', type=Path, help='output directory for the HTML files')
     parser.add_argument('--check', action='store_true', help='validate without writing anything')
     parser.add_argument('--listing', action='store_true', help='print Python files with line numbers')
+    parser.add_argument('--sections', action='store_true',
+                        help='print each section of the annotations of the given Python files with the code it covers')
     args = parser.parse_args()
+
+    if args.sections:
+        for path in args.paths:
+            print(f'==> {path} <==')
+            try:
+                section_view(path)
+            except BuildError as e:
+                print(f'error: {e}', file=sys.stderr)
+                return 1
+        return 0
 
     if args.listing:
         for path in args.paths:
