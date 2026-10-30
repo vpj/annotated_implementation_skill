@@ -61,9 +61,24 @@ then end your turn and wait for the user's answer. Silence is not approval.
    This writes `paper.pdf` and `paper.txt` with page markers. Use this, not a web fetch of the
    PDF; fetch tools return compressed PDF bytes, and later phases (checkpoint B especially) need
    to quote the paper's equations and proofs again. If `pypdf` is missing, install it.
-2. List the paper's components (models, losses, algorithms, training procedure) and the **prior
-   papers it depends on** (e.g. PPO depends on GAE for advantages).
-3. Draft a **file plan**: the Python files of the package, the way the code would be organised
+2. **Find the sources of the algorithm.** The link the user gives is not always the paper that
+   defines the algorithm. A blog post or a results study (scaling laws, benchmarks, comparisons)
+   often uses an algorithm that another document defines. Search for, and read:
+   - the **defining paper**: the document that gives the algorithm's equations. Save it with
+     `paper_text.py`; it is the document you implement. If the user's link is not this paper, keep
+     the link as context: cite it in the overview, but do not implement its comparisons.
+   - **blog posts** by the authors that explain the algorithm or add details the paper leaves out
+     (a series often has an earlier part that describes the method).
+   - the **official code**: the repository linked from the paper or the post, or the authors'
+     GitHub accounts. Note the repository URL and the commit you read.
+   List each source in `paper/sources.md`: its URL, what it contributes, and for code the commit.
+   It is a working note, never rendered. If two sources disagree (the code does something
+   the paper does not say), note it for checkpoint A.
+3. List the paper's components (models, losses, algorithms, training procedure) and the **prior
+   papers it depends on** (e.g. PPO depends on GAE for advantages). Mark which components are
+   the algorithm and which are only there to evaluate it (baselines, compared methods, scaling-law
+   fits). The plan covers the algorithm only, unless the user asks for more.
+4. Draft a **file plan**: the Python files of the package, the way the code would be organised
    anyway (the paper's loss, model or optimizer, a file per dependency that will be implemented,
    helpers they need, and the experiment in its own file, e.g. `experiment.py`; a thin runner in
    `experiments/` calls it and saves the results, see `references/figures.md`). Each file's
@@ -77,6 +92,14 @@ then end your turn and wait for the user's answer. Silence is not approval.
    what it implements and covers, plus the diagrams its annotation will carry (architecture, token
    layout, mask, loop, density...; see the writing guide's "Diagrams").
 
+   Make one file per **mechanism** the reader learns as a unit, not one file per component. Parts
+   that the paper introduces together, that only make sense together, or that undo each other
+   (an operation and its inverse, a module and the auxiliary loss that trains it) go in one file,
+   as one class each, in the order the paper explains them.
+   The reader then reads the mechanism from top to bottom without switching files. Split a file
+   only when a part is a separate idea that a reader can understand alone (a generic sequence
+   mixer, a dependency from another paper, the experiment), never only to make files shorter.
+
 If the user handed you existing code instead of a paper, the plan lists their files, and Phase 3
 becomes "strip comments/docstrings into notes, add tests, run them".
 
@@ -87,20 +110,39 @@ the request has not already answered. `AskUserQuestion` takes at most four quest
 the first four, then the rest in a second call, or state your default for the last one in the plan
 you present for approval. Cover:
 
-1. **Implementation scope** - core method only, or the full method with the paper's variants and
-   ablations.
-2. **Dependencies** - for each prior paper the method needs: implement it as its own annotated file
-   (or subpackage), or use an existing library implementation and link to it.
-3. **Documentation depth**
+1. **Implementation scope**
+   - the algorithm only (recommended): no baselines, no compared methods, no reproduction of the
+     source's results;
+   - the full method with the paper's variants and ablations.
+2. **Official code** (only if Phase 1 found it)
+   - implement fresh, using the paper and the official code together (recommended): the official
+     code settles details the paper leaves out; every difference from it is listed at checkpoint A;
+   - implement from the paper only, and use the official code only to check the result;
+   - use the official code for the parts it has, and annotate around it (the plain code then
+     imports it; say which parts the site explains and which it only links).
+3. **Dependencies** - for each prior paper or layer the method needs:
+   - implement it as its own annotated file (or subpackage);
+   - use an existing library implementation and link to it.
+
+   When the dependency needs custom kernels (compiled CUDA or Triton ops that do not run on a
+   CPU), offer these choices instead:
+   - a pure-PyTorch reference version: slow, but it runs on a CPU and can be annotated;
+   - the library version with its kernels (needs a GPU; the tests and the experiment need one too);
+   - a simple Transformer block in its place (a deviation from the paper, listed at checkpoint A;
+     recommended when the dependency is not the subject of the paper);
+   - another simpler substitute the user names.
+4. **Documentation depth**
    - intuition and the key equations;
    - full derivations of the main results;
    - derivations plus proofs (for each proof: reproduce in full, give a sketch, or link to it).
-4. **Experiment**
+5. **Experiment**
    - none;
    - minimal toy experiment (synthetic data, CPU, runs in minutes);
    - real training script.
    For the last two, follow up on dataset/environment, compute budget, and which metric to report.
-5. **Framework and audience** - framework (default PyTorch) and what the reader is assumed to
+   The experiment shows the algorithm working (for example, what it learns on a small dataset). It
+   does not reproduce the source's comparisons unless the scope answer includes them.
+6. **Framework and audience** - framework (default PyTorch) and what the reader is assumed to
    know, which decides what gets explained and what is taken as given.
 
 Then show the file plan, updated with the answers, and the project layout you will use (default
@@ -108,7 +150,7 @@ below; adapt to an existing project). **Wait for approval.**
 
 ```
 <topic>/
-├── paper/                # paper.pdf, paper.txt (from paper_text.py)
+├── paper/                # paper.pdf, paper.txt (from paper_text.py), sources.md (Phase 1 sources)
 ├── <package>/            # plain Python; one <module>.doc.html beside each <module>.py
 │   ├── __init__.py
 │   ├── __init__.doc.html # the overview
@@ -136,6 +178,12 @@ below; adapt to an existing project). **Wait for approval.**
      `black --line-length 120 --skip-string-normalization`, then read the result. Where black splits
      an expression badly (an operator between two wrapped calls, a call wrapped inside another
      call), name the parts in local variables instead.
+   - When an operation changes the length or shape of each example differently (it drops,
+     merges or routes elements depending on the data), decide how a batch holds the
+     results: padding with a mask, packing with offsets, or a loop over examples. Use the same
+     method everywhere in the package. The annotation explains it beside the code that does it,
+     and checkpoint A says whether it can change a result (for example, whether padded positions
+     count in a loss or an average).
 2. Write tests in `tests/` that show the code is **correct**, not merely that it runs:
    - a naive or explicit version of the paper's formula against the optimized implementation
      (e.g. a recursive advantage estimator against the explicit discounted sum);
@@ -143,12 +191,20 @@ below; adapt to an existing project). **Wait for approval.**
    - shapes, dtypes, and invariants (normalization, probabilities sum to 1, masking);
    - gradients where they matter (`torch.autograd.gradcheck`, or a finite-difference check);
    - a tiny overfit or loss-decreases check for anything trainable;
-   - for an experiment, a smoke test that runs a few steps end to end.
+   - for an experiment, a smoke test that runs a few steps end to end;
+   - for variable-length operations, that padded positions change no output and no loss.
 3. Test the **paper's claims**, not only the code: every bound, limit, invariance, or "this is
    always at most X" the annotations will repeat. Try to break each one, e.g. with an adversarial input
    built from the equality case of the inequality the paper relies on. Papers are sometimes wrong,
    and a claim the annotation states must be one you have checked. If a claim fails, keep the test (it
    asserts what actually happens) and report it at checkpoint A.
+
+   Test each claim over the inputs the code can actually produce, not only over the formula's
+   whole domain. Other parts of the method often restrict the inputs: two quantities that are
+   computed from the same values are not independent, and a threshold or a clamp limits the range
+   of another. A bound or minimum over the whole domain can then be one that the method never
+   reaches. Find the region the method can reach, and report both values when they differ: the
+   formula's value and the value the method can reach.
 4. Put shared test helpers in `tests/helpers.py` and add `tests/conftest.py` that inserts the
    project root and `tests/` into `sys.path`, so `pytest tests` works from the project root.
 5. Run the tests until they all pass. Fix the implementation, not the test, unless the test is
@@ -160,8 +216,12 @@ below; adapt to an existing project). **Wait for approval.**
   `file:line` that implements it;
 - the test results and what each test checks;
 - every **deviation from the paper**: numerical-stability tricks, simplifications, assumed
-  hyperparameters the paper does not state;
-- every **paper claim the tests found to be wrong or loose**, with the measured value.
+  hyperparameters the paper does not state, substituted layers (a simpler layer in place of one
+  that needs custom kernels), and how variable-length batches are held;
+- if the official code was used: every **difference between the paper and the official code**,
+  and which one this implementation follows;
+- every **paper claim the tests found to be wrong or loose**, with the measured value, and the
+  value over the inputs the method can reach when that is different.
 
 Stop and wait for approval or changes.
 

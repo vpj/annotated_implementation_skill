@@ -88,8 +88,10 @@ cp -r annotated_implementation_skill/skills/annotated-implementation ~/.claude/s
 
 When you ask for an annotated implementation, the skill works in five phases:
 
-1. **Read and scope.** Saves the paper to `paper/` and plans the Python files.
-2. **Scoping interview.** Asks about implementation scope, dependencies on other papers, how deep
+1. **Read and scope.** Finds the paper that defines the algorithm, related blog posts and the
+   official code, saves the paper to `paper/`, and plans the Python files.
+2. **Scoping interview.** Asks about implementation scope, whether to use the official code,
+   dependencies on other papers (including what to do with layers that need custom kernels), how deep
    the documentation should go (intuition, derivations, or proofs), whether to add an experiment,
    and the framework and audience.
 3. **Implement and test.** Writes plain code and tests, then stops for your review (checkpoint A).
