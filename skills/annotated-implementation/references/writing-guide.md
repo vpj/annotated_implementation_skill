@@ -206,6 +206,31 @@ diagrams with the file plan, and expect most files to have at least one.
 
 Skip diagrams that only restate one equation or that decorate.
 
+**A diagram must answer the questions it raises.** You know the method, so a diagram with gaps
+still looks complete to you. A reader who is new to the method sees the gaps as questions: "what
+is this number?", "where does this row go next?", "why is this step needed?", "which inputs can
+this position use?". If the figure does not answer them, the reader guesses, and often guesses
+wrong. So, after you draw a figure, read it as that reader:
+
+1. Cover the prose. Look only at the figure and its caption.
+2. Go through each element (a row, a box, a number, an arrow). Write down each question a new
+   reader would ask about it.
+3. Answer each question in the figure itself: add a label, a concrete value, a row, an arrow, or a
+   sentence in the caption.
+4. Do it again until the figure raises no more questions.
+
+The answers often need these details:
+
+- **A concrete example with real values** (a short sentence, a small grid, actual numbers), not
+  abstract boxes. A reader can check real values against what they know.
+- **What it is for.** Continue the flow to the quantity that the method trains on or produces (a
+  prediction, a target, a sample, a loss term). Without it, the reader cannot see why the
+  intermediate steps exist.
+- **What each row or box is,** with its symbol and a plain name.
+- **How the parts line up:** which element feeds which, what is kept or discarded, what is
+  repeated, and any offset between positions (for example, an output that belongs to the next
+  position).
+
 **How to draw.**
 
 - Inline `<svg>` inside a `<figure>` with a `<figcaption>` that says what to notice, not just what
