@@ -21,8 +21,10 @@ breadcrumbs: Adam=index.html; Convergence=convergence.html
      training is the special case where each $f_t$ is the loss on a random minibatch.</p>
   <p>The optimizer is measured by its <strong>regret</strong>: how much more it paid in total than the single
      best fixed parameter chosen with hindsight,</p>
-  $$R(T) = \sum_{t=1}^{T} \big[ f_t(\theta_t) - f_t(\theta^*) \big]
-    \qquad \theta^* = \arg\min_{\theta \in \mathcal{X}} \sum_{t=1}^{T} f_t(\theta)$$
+  \begin{align*}
+  R(T) &= \sum_{t=1}^{T} \big[ f_t(\theta_t) - f_t(\theta^*) \big] \\
+  \theta^* &= \arg\min_{\theta \in \mathcal{X}} \sum_{t=1}^{T} f_t(\theta)
+  \end{align*}
   <p>Regret grows with $T$, and the question is how fast. If $R(T)$ grows more slowly than $T$, the average
      regret $R(T) / T$ goes to zero: on average the optimizer does as well as $\theta^*$. The best possible rate for
      general convex problems is $O(\sqrt{T})$.</p>
@@ -45,7 +47,8 @@ breadcrumbs: Adam=index.html; Convergence=convergence.html
   <p>Then for all $T \ge 1$,</p>
   \begin{align*}
   R(T) \le & \frac{D^2}{2 \alpha (1 - \beta_1)} \sum_{i=1}^{d} \sqrt{T \hat{v}_{T,i}} \\
-  & + \frac{\alpha (1 + \beta_1) G_\infty}{(1 - \beta_1) \sqrt{1 - \beta_2} (1 - \gamma)^2} \sum_{i=1}^{d} \lVert g_{1:T,i} \rVert_2 \\
+  & + \frac{\alpha (1 + \beta_1) G_\infty}{(1 - \beta_1) \sqrt{1 - \beta_2} (1 - \gamma)^2} \\
+  & \qquad \cdot \sum_{i=1}^{d} \lVert g_{1:T,i} \rVert_2 \\
   & + \sum_{i=1}^{d} \frac{D_\infty^2 G_\infty \sqrt{1 - \beta_2}}{2 \alpha (1 - \beta_1) (1 - \lambda)^2}
   \end{align*}
   <p><strong>Corollary</strong> <span class="paper-ref">(Corollary 4.2)</span>. Since $\lVert g_{1:T,i} \rVert_2 \le G_\infty \sqrt{T}$ and
@@ -66,13 +69,19 @@ breadcrumbs: Adam=index.html; Convergence=convergence.html
     <summary>Proof sketch</summary>
     <p><strong>1. Linearize.</strong> A convex function lies above its tangent planes <span class="paper-ref">(Lemma 10.2)</span>, so each
        term of the regret is bounded by a linear one:</p>
-    $$f_t(\theta_t) - f_t(\theta^*) \le g_t^\top (\theta_t - \theta^*) = \sum_{i=1}^{d} g_{t,i} (\theta_{t,i} - \theta^*_i)$$
+    \begin{align*}
+    f_t(\theta_t) - f_t(\theta^*) &\le g_t^\top (\theta_t - \theta^*) \\
+    &= \sum_{i=1}^{d} g_{t,i} (\theta_{t,i} - \theta^*_i)
+    \end{align*}
     <p><strong>2. Use the update rule.</strong> For one coordinate, subtract $\theta^*_i$ from both sides of the
        update and square. Solving for $g_{t,i}(\theta_{t,i} - \theta^*_i)$ and applying Young's inequality
        $ab \le a^2 / 2 + b^2 / 2$ to the momentum cross term gives three kinds of terms:</p>
     <ul>
-      <li>a distance term $\frac{\sqrt{\hat{v}_{t,i}}}{2 \alpha_t (1 - \beta_1)}
-          \big( (\theta_{t,i} - \theta^*_i)^2 - (\theta_{t+1,i} - \theta^*_i)^2 \big)$,</li>
+      <li>a distance term
+          \begin{align*}
+          &\frac{\sqrt{\hat{v}_{t,i}}}{2 \alpha_t (1 - \beta_1)} \\
+          &\quad \cdot \big( (\theta_{t,i} - \theta^*_i)^2 - (\theta_{t+1,i} - \theta^*_i)^2 \big),
+          \end{align*}</li>
       <li>a step-size term proportional to $\alpha_t \, \hat{m}_{t,i}^2 / \sqrt{\hat{v}_{t,i}}$,</li>
       <li>a momentum term weighted by $\beta_{1,t}$.</li>
     </ul>
@@ -84,8 +93,9 @@ breadcrumbs: Adam=index.html; Convergence=convergence.html
     <p><strong>4. Bound the step-size term.</strong> A lemma <span class="paper-ref">(Lemma 10.4)</span> expands $\hat{m}_t$ and $\hat{v}_t$ as sums
        over past gradients and bounds $\sum_t \hat{m}_{t,i}^2 / \sqrt{t \hat{v}_{t,i}}$ using the
        arithmetic-geometric series in $\gamma$. This is where $\gamma \lt 1$ is needed. A second lemma <span class="paper-ref">(Lemma 10.3)</span>, proved by
-       induction on $T$, then turns $\sum_t \sqrt{g_{t,i}^2 / t}$ into $2 G_\infty \lVert g_{1:T,i} \rVert_2$.
-       That gives the second term.</p>
+       induction on $T$, then gives the bound</p>
+    $$\sum_t \sqrt{g_{t,i}^2 / t} \le 2 G_\infty \lVert g_{1:T,i} \rVert_2$$
+    <p>That gives the second term.</p>
     <p><strong>5. Bound the momentum term.</strong> Because $\beta_{1,t} = \beta_1 \lambda^{t-1}$, the momentum
        terms form a geometric series in $\lambda$, and their sum is bounded by the third term.</p>
     <p>The extracted text of the first lemma <span class="paper-ref">(Lemma 10.4)</span> states a bound with $1 / (1 - \gamma)$ and no $G_\infty$, but its proof
@@ -95,8 +105,9 @@ breadcrumbs: Adam=index.html; Convergence=convergence.html
 
 <section data-kind="doc">
   <h2>Where the proof fails</h2>
-  <p>Step 3 only works if every coefficient
-     $\frac{\sqrt{\hat{v}_{t,i}}}{\alpha_t} - \frac{\sqrt{\hat{v}_{t-1,i}}}{\alpha_{t-1}}$ is non-negative.
+  <p>Step 3 only works if every coefficient</p>
+  $$\frac{\sqrt{\hat{v}_{t,i}}}{\alpha_t} - \frac{\sqrt{\hat{v}_{t-1,i}}}{\alpha_{t-1}}$$
+  <p>is non-negative.
      Only then can each $(\theta_{t,i} - \theta^*_i)^2$ be replaced by its upper bound $D_\infty^2$. That
      requires $\sqrt{\hat{v}_t} / \alpha_t$ to never decrease. For SGD and AdaGrad it doesn't. For Adam it can:
      $\hat{v}_t$ is an exponential moving average, so it drops whenever recent gradients are smaller than old ones.</p>

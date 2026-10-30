@@ -40,7 +40,7 @@ breadcrumbs: Adam=index.html; AdaMax=adamax.html
   \end{align*}
   <p>Two limits are used here, and the paper takes both as given.</p>
   <ul>
-    <li>$(1 - \beta_2^p)^{1/p} \to 1$. Its logarithm is $\frac{1}{p} \log(1 - \beta_2^p)$. Both factors go to
+    <li>$(1 - \beta_2^p)^{1/p} \to 1$. Its logarithm is $\log(1 - \beta_2^p) / p$. Both factors go to
         zero, since $\beta_2^p \to 0$ for $\beta_2 \lt 1$.</li>
     <li>The $L^p$ norm of a vector tends to its largest entry. For $x \in \mathbb{R}^t$ with largest entry
         $x_{max}$, $x_{max} \le \big( \sum_i x_i^p \big)^{1/p} \le t^{1/p} x_{max}$, and $t^{1/p} \to 1$.</li>
@@ -90,7 +90,7 @@ breadcrumbs: Adam=index.html; AdaMax=adamax.html
      of $\beta_2$, which can be taken out:</p>
   \begin{align*}
   u_t &= \max \big( \beta_2^{t-1} |g_1|, \dots, \beta_2 |g_{t-1}|, |g_t| \big) \\
-  &= \max \Big( \beta_2 \max \big( \beta_2^{t-2} |g_1|, \dots, |g_{t-1}| \big), |g_t| \Big) \\
+  &= \max \big( \beta_2 \max ( \beta_2^{t-2} |g_1|, \dots, |g_{t-1}| ), |g_t| \big) \\
   &= \max(\beta_2 u_{t-1}, |g_t|)
   \end{align*}
   <aside class="note">We add $\epsilon$ to $|g_t|$, as PyTorch's <code>torch.optim.Adamax</code> does.
@@ -116,7 +116,8 @@ breadcrumbs: Adam=index.html; AdaMax=adamax.html
      &\le (1 - \beta_1) \, u_t \sum_{i=1}^{t} \Big( \frac{\beta_1}{\beta_2} \Big)^{t-i}
      \end{align*}
      For large $t$ this gives
-     $|\Delta_t| \le \alpha \frac{1 - \beta_1}{1 - \beta_1 / \beta_2} \approx 1.009 \alpha$ for the defaults.
+     $$|\Delta_t| \le \alpha \frac{1 - \beta_1}{1 - \beta_1 / \beta_2} \approx 1.009 \alpha$$
+     for the defaults.
      Equality holds when $|g_i| = \beta_2^{-(t-i)}$, gradients that shrink slowly towards the present, and
      this implementation reaches $1.009 \alpha$ on exactly that sequence.</aside>
 </section>

@@ -140,7 +140,7 @@ After rendering, every HTML file sets `window.annotationReport`:
 ```js
 { mathErrors: [{tex, message}], overflowing: [{section, tex}], unrenderedDollar: [{section, text}],
   svgPlainMath: [{section, text}], svgLowContrast: [{section, text, contrast}],
-  svgMisplaced: [{section, text, problem}], ok: true|false }
+  svgMisplaced: [{section, text, problem}], inlineLarge: [{section, tex, problem}], ok: true|false }
 ```
 
 and shows a red banner when anything is wrong. `overflowing` lists display equations wider than
@@ -149,7 +149,7 @@ their column; split them over the lines of an `align*`. `svgPlainMath` lists dia
 diagram text and math labels with less than 3:1 contrast against the background in the current
 colour scheme, usually a hard-coded dark fill seen in dark mode; it only sees the scheme it is
 rendered in, so check both. `svgMisplaced` lists diagram labels whose typeset math is drawn away
-from the label, or labels that stick out of their drawing. `unrenderedDollar` lists sections whose
+from the label, or labels that stick out of their drawing. `inlineLarge` lists inline formulas taller than 1.3em or wider than half their paragraph; make them display equations. `unrenderedDollar` lists sections whose
 visible text still contains `$`, usually an unbalanced delimiter (wrap literal dollar signs in
 `class="no-math"`).
 

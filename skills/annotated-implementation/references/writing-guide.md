@@ -112,6 +112,13 @@ a few doc sections carrying the narrative and many short notes.
   Between steps, add a sentence when the step is not obvious ("importance sampling $a$ from
   $\pi_{\theta_{old}}$").
 - Use `\operatorname{clip}`, `\min`, `\max`, `\mathbb{E}`, `\log`, never bare words in math.
+- Inline math is for symbols and short expressions that sit in a line of text like a word: $p_t$,
+  $F = 1/N$, $\hat{z}_j - \bar{z}_{j-1}$. Put a formula in a display equation when it has a fraction
+  with more than a single symbol above or below the bar, a sum or a product with limits, a square
+  root over an expression, or more than one operator on each side of the `=`. Inline, such a formula
+  is shrunk and stretches the line spacing. Inline math never breaks across lines (the stylesheet
+  prevents it), so a long inline formula would run past the column. The self-check reports inline
+  math that is too tall or wider than half the column (`inlineLarge`).
 - Keep display equations narrow, but split one only when it does not fit. The prose column is only
   40% of the width: at the narrowest desktop width (900px) it holds about 344px of math, and notes
   (`aside.note`) hold less. The length of the LaTeX source is a poor guess of the rendered width

@@ -475,6 +475,28 @@
     }
 
     // Visible prose that still contains `$` after rendering: math that was not picked up.
+    // Inline formulas that belong in a display equation: a fraction, a root or a sum with limits that
+    // makes the formula taller than a line of text, anything very tall, or a formula wider than its
+    // paragraph (inline math does not wrap, so it would run past the column).
+    function inlineTooLarge(root) {
+        const found = [];
+        for (const katex of root.querySelectorAll('.docs .katex')) {
+            if (katex.closest('.katex-display, .svg-labels, figure')) continue;
+            const height = Math.max(0, ...[...katex.querySelectorAll('.strut')].map((s) => parseFloat(s.style.height) || 0));
+            const stacked = katex.querySelector('.mfrac, .sqrt, .op-limits') !== null;
+            const block = katex.closest('p, li, td, summary, figcaption, aside, details') || katex.parentElement;
+            const width = katex.getBoundingClientRect().width;
+            let problem = null;
+            if ((stacked && height > 1.3) || height > 1.6) problem = `${height.toFixed(2)}em tall`;
+            else if (block.clientWidth && width > block.clientWidth) problem = 'wider than its paragraph';
+            if (problem) {
+                const tex = katex.querySelector('annotation');
+                found.push({section: sectionId(katex), tex: tex ? tex.textContent : katex.textContent, problem});
+            }
+        }
+        return found;
+    }
+
     function unrenderedDollars(root) {
         const found = [];
         root.querySelectorAll('.docs').forEach((docs) => {
@@ -506,9 +528,10 @@
         const svgPlainMath = plainMathInSvg(root);
         const svgLowContrast = lowContrastSvgText(root);
         const svgMisplaced = misplacedSvgLabels(root);
-        const report = {mathErrors, overflowing, unrenderedDollar, svgPlainMath, svgLowContrast, svgMisplaced,
+        const inlineLarge = inlineTooLarge(root);
+        const report = {mathErrors, overflowing, unrenderedDollar, svgPlainMath, svgLowContrast, svgMisplaced, inlineLarge,
             ok: !mathErrors.length && !overflowing.length && !unrenderedDollar.length && !svgPlainMath.length
-                && !svgLowContrast.length && !svgMisplaced.length};
+                && !svgLowContrast.length && !svgMisplaced.length && !inlineLarge.length};
         window.annotationReport = report;
         if (report.ok) return;
 
@@ -518,6 +541,7 @@
         svgPlainMath.forEach((e) => console.warn(`Diagram label in #${e.section} looks like math but is not in $...$:`, e.text));
         svgLowContrast.forEach((e) => console.warn(`Diagram text in #${e.section} has contrast ${e.contrast}:1 against the page:`, e.text));
         svgMisplaced.forEach((e) => console.warn(`Diagram label in #${e.section}: ${e.problem}:`, e.text));
+        inlineLarge.forEach((e) => console.warn(`Inline math in #${e.section} is ${e.problem}; make it a display equation:`, e.tex));
         const parts = [];
         if (mathErrors.length) parts.push(`${mathErrors.length} math error(s)`);
         if (overflowing.length) parts.push(`${overflowing.length} equation(s) too wide`);
@@ -525,6 +549,7 @@
         if (svgPlainMath.length) parts.push(`${svgPlainMath.length} diagram label(s) with plain-text math`);
         if (svgLowContrast.length) parts.push(`${svgLowContrast.length} diagram label(s) hard to read in this colour scheme`);
         if (svgMisplaced.length) parts.push(`${svgMisplaced.length} diagram label(s) out of place`);
+        if (inlineLarge.length) parts.push(`${inlineLarge.length} inline formula(s) that should be display equations`);
         const banner = document.createElement('div');
         banner.className = 'math-errors';
         banner.textContent = `${parts.join(', ')} - see console or window.annotationReport`;

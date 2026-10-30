@@ -626,6 +626,12 @@ pre, tt, code {
     overflow-y: hidden;
 }
 
+/* Inline math never breaks across lines: a formula split at its `=` is hard to read. A formula too
+   long for this goes in a display equation; the self-check reports it (inlineTooLarge). */
+.docs .katex {
+    white-space: nowrap;
+}
+
 /* Code */
 
 .code pre {

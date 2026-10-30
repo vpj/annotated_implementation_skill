@@ -116,8 +116,8 @@ breadcrumbs: Adam=index.html; Adam optimizer=adam.html
   &= \alpha \frac{\sqrt{1 - \beta_2^t}}{1 - \beta_1^t} \cdot \frac{m_t}{\sqrt{v_t} + \epsilon \sqrt{1 - \beta_2^t}} \\
   &= \alpha_t \frac{m_t}{\sqrt{v_t} + \hat{\epsilon}}
   \end{align*}
-  <p>with $\alpha_t = \alpha \frac{\sqrt{1 - \beta_2^t}}{1 - \beta_1^t}$ and
-     $\hat{\epsilon} = \epsilon \sqrt{1 - \beta_2^t}$.</p>
+  <p>with</p>
+  $$\alpha_t = \alpha \frac{\sqrt{1 - \beta_2^t}}{1 - \beta_1^t}, \qquad \hat{\epsilon} = \epsilon \sqrt{1 - \beta_2^t}$$
   <aside class="note">The paper writes the efficient form with $\hat{\epsilon}$ but does not say what it is.
      With $\hat{\epsilon} = \epsilon \sqrt{1 - \beta_2^t}$ the update is identical to <a href="#eq-adam">the update with explicit bias correction</a>; using
      $\epsilon$ there instead would make the effective $\epsilon$ grow as $1 / \sqrt{1 - \beta_2^t}$ during
@@ -128,11 +128,12 @@ breadcrumbs: Adam=index.html; Adam optimizer=adam.html
   <p>$\theta_t = \theta_{t-1} - \alpha_t \frac{m_t}{\sqrt{v_t} + \hat{\epsilon}}$</p>
 
   <h4>How big are the steps?</h4>
-  <p>Ignoring $\epsilon$, the step taken in parameter space is
-     $\Delta_t = \alpha \frac{\hat{m}_t}{\sqrt{\hat{v}_t}}$. Three things follow.</p>
+  <p>Ignoring $\epsilon$, the step taken in parameter space is</p>
+  $$\Delta_t = \alpha \frac{\hat{m}_t}{\sqrt{\hat{v}_t}}$$
+  <p>Three things follow.</p>
   <p><strong>Its size does not depend on the scale of the gradients.</strong> Multiplying every gradient by
-     $c$ multiplies $\hat{m}_t$ by $c$ and $\hat{v}_t$ by $c^2$, which cancel:
-     $\frac{c \hat{m}_t}{\sqrt{c^2 \hat{v}_t}} = \frac{\hat{m}_t}{\sqrt{\hat{v}_t}}$.</p>
+     $c$ multiplies $\hat{m}_t$ by $c$ and $\hat{v}_t$ by $c^2$, which cancel:</p>
+  $$\frac{c \hat{m}_t}{\sqrt{c^2 \hat{v}_t}} = \frac{\hat{m}_t}{\sqrt{\hat{v}_t}}$$
   <p><strong>It is usually no bigger than $\alpha$.</strong> $\hat{m}_t$ estimates $\mathbb{E}[g]$ and
      $\hat{v}_t$ estimates $\mathbb{E}[g^2]$, and by Jensen's inequality
      $\mathbb{E}[g]^2 \le \mathbb{E}[g^2]$, so $\big| \hat{m}_t / \sqrt{\hat{v}_t} \big| \lesssim 1$ and
@@ -143,8 +144,9 @@ breadcrumbs: Adam=index.html; Adam optimizer=adam.html
   <p><strong>Sparse gradients give larger steps.</strong> Suppose a gradient has been zero at every step
      except the current one. Then $m_t = (1 - \beta_1) g_t$ and $v_t = (1 - \beta_2) g_t^2$, so</p>
   $$|\Delta_t| = \alpha \frac{1 - \beta_1}{\sqrt{1 - \beta_2}} \cdot \frac{\sqrt{1 - \beta_2^t}}{1 - \beta_1^t}$$
-  <p>which approaches $\alpha \frac{1 - \beta_1}{\sqrt{1 - \beta_2}} \approx 3.16 \alpha$ for the default
-     $\beta_1$ and $\beta_2$. The paper gives this as the upper bound on the step.</p>
+  <p>which approaches</p>
+  $$\alpha \frac{1 - \beta_1}{\sqrt{1 - \beta_2}} \approx 3.16 \alpha$$
+  <p>for the default $\beta_1$ and $\beta_2$. The paper gives this as the upper bound on the step.</p>
   <aside class="note">It is not quite an upper bound. Split each term of $m_t$ as
      $\beta_1^{t-i} g_i = \big( \beta_1^{t-i} \beta_2^{-(t-i)/2} \big) \big( \beta_2^{(t-i)/2} g_i \big)$ and apply
      Cauchy-Schwarz. With $\rho = \beta_1^2 / \beta_2$:
