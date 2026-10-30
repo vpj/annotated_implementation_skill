@@ -284,6 +284,7 @@ If the code must change after annotating, rerun the tests, rerun `--listing`, an
    - Is each symbol and setting defined at its first occurrence, in order from the top?
    - Can you read each chart and table without the prose: both axes labelled, each line in a
      legend, each setting in the caption?
+   - Does each note beside a line that computes a formula show that formula, not only its name?
    - Does each diagram answer the questions it raises (the procedure in the writing guide's
      "Diagrams"): every value on an arrow, every value leaving the node that computes it, every
      path named, no line through a box it does not enter?

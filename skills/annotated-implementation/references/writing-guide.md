@@ -192,6 +192,11 @@ with the trainer, and the error has an effect at each step."
   "The trainer computes...", not "We compute...".
 - Mark every deviation from the paper with a note. Decide for each note whether it is open or
   collapsed. The test: if a reader skips it, can they misunderstand the method or its results?
+  Apply the test to what the note adds to the main text, not to its subject. A note must not
+  repeat the main text: when the main text already derives a correction or states a deviation,
+  cut the repeated part from the note. What is left is usually side information, so it is
+  collapsed. If the main text does not say the important part, put that part in the main text
+  rather than in an open note.
   - **Open** (`<aside class="note">`): a correction of a claim in the paper, a deviation that changes
     what the code computes or what the experiment shows (a substituted layer, a changed loss), and a
     caveat on a number the prose states.
