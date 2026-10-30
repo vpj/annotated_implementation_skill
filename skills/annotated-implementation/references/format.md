@@ -90,7 +90,8 @@ Extra styled elements:
 
 | Element | Use |
 |---|---|
-| `<aside class="note">` | Deviations from the paper, caveats, implementation tricks. |
+| `<aside class="note">` | Deviations from the paper, caveats, implementation tricks. Always shown. |
+| `<details class="note"><summary>Title</summary>...</details>` | The same note, collapsed behind a short, dim title until the reader opens it. See the writing guide for which notes to collapse. |
 | `<figure>` + `<figcaption>` | Diagrams. Inline `<svg>` is preferred; use `currentColor` for lines and text, and the theme's token colours for accents (`var(--hl-k)` pink, `var(--hl-nf)` orange, `var(--hl-m)` purple, `var(--hl-nb)` cyan, `var(--hl-bp)` green) so it works in light and dark mode. An SVG `<text>` containing `$...$` is moved at load time into an HTML overlay on the drawing and typeset there, anchored at the same `x`, `y` (honouring `text-anchor`, `transform`, `font-size`, `font-weight`, `fill` and `opacity`, and scaling with the drawing). The `<svg>` needs a `viewBox`; do not use `<foreignObject>`. See the writing guide for when and how to draw. |
 | `data-group="a b"` on SVG elements | Makes a diagram interactive. The element belongs to the groups `a` and `b` (space-separated names, unique inside the figure). Clicking it lights up every element of the same figure that shares a group with it and dims the other grouped elements; clicking it again, outside the groups, or pressing Escape, shows the whole figure. Works on shapes, paths, `<text>` (including `$...$` labels) and `<g>`; put it on a `<g>` to group a box with its label. The whole inside of a grouped shape is clickable, also with `fill="none"`, and so is a band 10 units wide around each grouped line. Elements without `data-group` are never dimmed. See the writing guide for what to group. |
 | `<details><summary>` | Long proofs or side derivations the reader can expand. |

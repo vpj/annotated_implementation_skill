@@ -65,6 +65,12 @@ Choose split points so each section's prose explains exactly the code beside it.
   kind:
   - prose: `$\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$`
   - code: `delta = rewards[:, t] + gamma * last_value - values[:, t]`
+- **When a line computes a formula, its note shows the formula,** not only the name of the
+  result. "$\mathcal{L}$, in the form of the paper" or "the cosine" makes the reader scroll up and
+  match the code to an equation; the formula beside the code lets them check each term at once.
+  Write it with the same LaTeX as the derivation above, so that clicking a symbol links the two.
+  This holds even when the formula was derived a few sections earlier. If a symbol in the formula
+  is new, define it in the same note.
 - Do not write prose for trivial lines just to fill a section; leave the section empty. Merge two
   neighbouring sections only when one piece of prose explains the code of both.
 - Put long derivations above the class or function they justify, not inside a method.
@@ -184,7 +190,15 @@ with the trainer, and the error has an effect at each step."
   smaller." "The paper does not give this value. We use 0.95."
 - Use "we" only for decisions in the implementation ("We use 0.2"). Describe the method directly:
   "The trainer computes...", not "We compute...".
-- Mark every deviation from the paper with `<aside class="note">`.
+- Mark every deviation from the paper with a note. Decide for each note whether it is open or
+  collapsed. The test: if a reader skips it, can they misunderstand the method or its results?
+  - **Open** (`<aside class="note">`): a correction of a claim in the paper, a deviation that changes
+    what the code computes or what the experiment shows (a substituted layer, a changed loss), and a
+    caveat on a number the prose states.
+  - **Collapsed** (`<details class="note">`): side information that the reader can skip, such as how
+    the authors' code does the same thing differently, an implementation trick, or a choice that has no
+    effect on the result. The `<summary>` says what the note is about in a few words, so a reader
+    can decide to open it ("Authors' code: mean over padding too", not "Note").
 - When a test showed that a claim in the paper is wrong or loose, say so in a note next to the code
   the claim is about: what the paper states, a short derivation of the correct statement, the input
   that breaks the original (usually the equality case of the inequality used), and the value the
