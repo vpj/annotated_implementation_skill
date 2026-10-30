@@ -259,15 +259,18 @@ If the code must change after annotating, rerun the tests, rerun `--listing`, an
    (the build checks them against the other HTML files), and comments or docstrings left in the
    code.
 2. Serve the site (`python -m http.server --directory site`) and open every HTML file in a browser
-   if one is available (or ask the user to), with the window at least 900px wide: the overflow
-   check measures the layout at the current width. Each one publishes a self-check once it has rendered:
+   if one is available (or ask the user to), with the window exactly 900px wide: the overflow
+   check measures the layout at the current width, and 900px is the narrowest desktop width, so an
+   equation that fits there fits on every desktop screen. Each one publishes a self-check once it has rendered:
    evaluate `window.annotationReport` with a JavaScript tool, or look for the red banner. It lists
    math errors, display equations wider than their column, text that still contains `$`
    (math that was not rendered), diagram labels with math written as plain text instead of
    `$...$`, and diagram text too dark or too light to read against the background. Fix all of them; split
    wide equations over lines of an `align*`. Run the check in **both colour schemes** (emulate
    `prefers-color-scheme: dark` and `light`, e.g. a `colorScheme` option of the browser tool): a
-   diagram can pass in one and be unreadable in the other. The report also lists diagram labels out
+   diagram can pass in one and be unreadable in the other. Also switch the scheme after a page has
+   loaded, then read the report again: the self-check runs again on the change, and it catches
+   colours that were fixed at load time. The report also lists diagram labels out
    of place (typeset math away from its label, or a label outside its drawing).
    Browser tools are usually Chromium; Safari's WebKit lays out some things differently. On macOS,
    also run every HTML file that has a figure through WebKit, in both schemes, and look at the PNGs:

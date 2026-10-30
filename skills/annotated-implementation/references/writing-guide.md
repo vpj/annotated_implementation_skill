@@ -102,10 +102,17 @@ a few doc sections carrying the narrative and many short notes.
   Between steps, add a sentence when the step is not obvious ("importance sampling $a$ from
   $\pi_{\theta_{old}}$").
 - Use `\operatorname{clip}`, `\min`, `\max`, `\mathbb{E}`, `\log`, never bare words in math.
-- Keep display equations narrow. The prose column is only 40% of the width, about 365-485px of text
-  on a desktop screen, which fits roughly 35 characters of LaTeX source per line for ordinary
-  expressions (fewer with fractions and sums). Notes (`aside.note`) are narrower still. Split anything longer over the lines of an `align*`: a long right-hand side on lines
-  starting with `&=`, or a sum of large terms on lines starting with `& +`.
+- Keep display equations narrow, but split one only when it does not fit. The prose column is only
+  40% of the width: at the narrowest desktop width (900px) it holds about 344px of math, and notes
+  (`aside.note`) hold less. The length of the LaTeX source is a poor guess of the rendered width
+  (`\mathcal{L}_{\text{ratio}}` is 26 characters of source and about 4 characters wide), so do not
+  split by counting characters. Write the equation on one line, build, and read the self-check at a
+  900px window. The self-check measures the rendered width and lists each equation that is too wide.
+  - If it is a little too wide, make it narrower first: `\tfrac` for a small factor, `\big` in place
+    of `\Big` or `\left`/`\right`.
+  - If it is still too wide, split it over the lines of an `align*` at a top-level `=` (lines that
+    start with `&=`) or between large terms (lines that start with `&\quad +`). Never split an
+    equation that fits: the split makes it harder to read.
 - Name a new quantity with a new symbol. If a derivation needs a ratio that looks like one from the
   paper but is not the same (for example $\beta_1^2 / \beta_2$ versus the paper's
   $\gamma = \beta_1^2 / \sqrt{\beta_2}$), give it its own letter; reusing the paper's would link two
